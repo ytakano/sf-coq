@@ -1,0 +1,7 @@
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+
+(custom-set-variables 
+  '(coq-prog-args '("-R" "/home/coq/cpdt/src" "Cpdt"))
+)
