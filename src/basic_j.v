@@ -767,6 +767,29 @@ Fixpoint nat_to_bin (n:nat) (b:bin) : bin :=
   | S n' => nat_to_bin n' (bin_increment b)
   end.
 
+Theorem nat_to_bin_1 : forall (n:nat),
+    nat_to_bin n (Bx1 B0) = nat_to_bin (S n) B0.
+Proof.
+  intros n.
+  induction n.
+  { simpl.
+    reflexivity. }
+  { simpl.
+    reflexivity. }
+Qed.
+
+
+Theorem nat_to_bin_comm : forall n:nat,
+    nat_to_bin n (Bx1 B0) = bin_increment (nat_to_bin n B0).
+Proof.
+  intros n.
+  induction n.
+  { simpl.
+    reflexivity. }
+  { simpl.
+Admitted.
+
+
 Theorem nat_bin_nat : forall n:nat,
     bin_to_nat (nat_to_bin n B0) = n.
 Proof.
@@ -774,7 +797,9 @@ Proof.
   induction n.
   { simpl.
     reflexivity. }
-  {
-    
-
-
+  { simpl.
+    rewrite -> nat_to_bin_comm.
+    rewrite -> bin_to_nat_comm.
+    rewrite -> IHn.
+    reflexivity. }
+Qed.
