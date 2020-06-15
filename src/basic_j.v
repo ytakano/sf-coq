@@ -778,7 +778,6 @@ Proof.
     reflexivity. }
 Qed.
 
-
 Theorem nat_to_bin_comm : forall n:nat,
     nat_to_bin n (Bx1 B0) = bin_increment (nat_to_bin n B0).
 Proof.

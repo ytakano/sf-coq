@@ -485,6 +485,14 @@ Module NatList.
     nonzeros (n :: l) = nonzeros [n] ++ nonzeros l.
   Proof.
     intros n l.
+    induction l.
+    { reflexivity. }
+    { simpl.
+      reflexivity. }
+  Qed.
+
+  Theorem nonzeros_nil : nonzeros [] = [].
+  Proof.
     reflexivity.
   Qed.
 
@@ -494,7 +502,207 @@ Module NatList.
     intros l1 l2.
     induction l1.
     { reflexivity. }
-    { 
+    { rewrite -> app_n.
+      rewrite -> nonzeros_n.
+      rewrite -> nonzeros_n.
+      rewrite -> nonzeros_nil.
+      rewrite -> app_nil_end.
+      rewrite -> IHl1.
+      replace (nonzeros (n :: l1)) with (nonzeros [n] ++ nonzeros l1).
+      rewrite -> app_ass.
+      reflexivity.
+      { rewrite <- nonzeros_n.
+        reflexivity. } }
+  Qed.
+
+  Theorem count_member_nonzero : forall (s:bag),
+      ble_nat 1 (count 1 (1 :: s)) = true.
+  Proof.
+    intros n.
+    reflexivity.
+  Qed.
+
+  Theorem rev_injective_p: forall (l1 l2 : natlist),
+      l1 = l2 -> rev l1 = rev l2.
+  Proof.
+    intros l1 l2 H.
+    { induction l1.
+      { rewrite <- H.
+        reflexivity. }
+      { rewrite -> H.
+        reflexivity. } }
+  Qed.
+
+  Theorem rev_nil : rev [] = [].
+  Proof.
+    reflexivity.
+  Qed.
+
+  Theorem rev_injective: forall (l1 l2 : natlist),
+      rev l1 = rev l2 -> l1 = l2.
+  Proof.
+    intros l1 l2 H.
+    induction l1.
+    { apply rev_injective_p in H.
+      rewrite <- rev_involutive.
+      replace ([]) with (rev (rev [])).
+      apply H.
+      { rewrite -> rev_involutive.
+        reflexivity. } }
+    { rewrite <- rev_involutive.
+      replace (n :: l1) with (rev (rev (n :: l1))).
+      rewrite -> H.
+      reflexivity.
+      { rewrite -> rev_involutive.
+        reflexivity. } }
+  Qed.
+
+  Inductive natoption : Type :=
+  | Some : nat -> natoption
+  | None : natoption.
+
+  Fixpoint index (n:nat) (l:natlist) : natoption :=
+    match l with
+    | nil => None
+    | a :: l' => match beq_nat n O with
+                 | true => Some a
+                 | false => index (pred n) l'
+                 end
+    end.
+
+  Fixpoint index' (n:nat) (l:natlist) : natoption :=
+    match l with
+    | nil => None
+    | a :: l' => if beq_nat n O then Some a else index (pred n) l'
+    end.
+
+  Definition option_elim (o:natoption) (d:nat) :=
+    match o with
+    | Some n' => n'
+    | None => d
+    end.
+
+  Definition hd_opt (l:natlist) : natoption :=
+    match l with
+    | nil => None
+    | h :: t => Some h
+    end.
+
+  Theorem option_elim_hd: forall (l:natlist) (default:nat),
+      hd default l = option_elim (hd_opt l) default.
+  Proof.
+    intros l default.
+    induction l.
+    { reflexivity. }
+    { simpl.
+      reflexivity. }
+  Qed.
+
+  Fixpoint beq_natlist (l1 l2 : natlist) : bool :=
+    match l1, l2 with
+    | nil, nil => true
+    | nil, _ => false
+    | _ , nil => false
+    | h1 :: t1, h2 :: t2 =>
+      if beq_nat h1 h2 then beq_natlist t1 t2 else false
+    end.
+
+  Example test_beq_natlist1: (beq_natlist nil nil = true).
+  Proof. reflexivity. Qed.
+  Example test_beq_natlist2: (beq_natlist [1, 2, 3] [1, 2, 3] = true).
+  Proof. reflexivity. Qed.
+  Example test_beq_natlist3: (beq_natlist [1, 2, 3] [1, 2, 4] = false).
+  Proof. reflexivity. Qed.
+
+  Theorem beq_natlist_refl: forall l:natlist,
+      true = beq_natlist l l.
+  Proof.
+    intros l.
+    induction l.
+    { reflexivity. }
+    { simpl.
+      rewrite <- IHl.
+      rewrite <- beq_nat_refl.
+      reflexivity. }
+  Qed.
+
+  Theorem silly1 : forall (n m o p : nat),
+      n = m ->
+      [n, o] = [n, p] ->
+      [n, o] = [m, p].
+  Proof.
+    intros n m o p eq1 eq2.
+    rewrite <- eq1.
+    apply eq2.
+  Qed.
+
+  Theorem silly2 : forall (n m o p : nat),
+      n = m ->
+      (forall (q r : nat), q = r -> [q, o] = [r, p]) ->
+      [n, o] = [m, p].
+  Proof.
+    intros n m o p eq1 eq2.
+    apply eq2.
+    apply eq1.
+  Qed.
+
+  Theorem silly2a: forall (n m : nat),
+      (n, n) = (m, m) ->
+      (forall (q r : nat), (q, q) = (r, r) -> [q] = [r]) ->
+      [n] = [m].
+  Proof.
+    intros n m eq1 eq2.
+    apply eq2.
+    apply eq1.
+  Qed.
+
+  Theorem silly3: forall (n : nat),
+      true = beq_nat n 5 ->
+      beq_nat (S (S n)) 7 = true.
+  Proof.
+    intros n H.
+    symmetry.
+    simpl.
+    apply H.
+  Qed.
+
+  Theorem rev_exercise1 : forall (l l' : natlist),
+      l = rev l' -> l' = rev l.
+  Proof.
+    intros l l' H.
+    rewrite -> H.
+    rewrite -> rev_involutive.
+    reflexivity.
+  Qed.
+
+  Theorem app_ass' : forall l1 l2 l3 : natlist,
+      (l1 ++ l2) ++ l3 = l1 ++ (l2 ++ l3).
+  Proof.
+    intros l1.
+    induction l1 as [| n l1'].
+    { intros l2 l3.
+      reflexivity. }
+    { intros l2 l3.
+      simpl.
+      rewrite -> IHl1'.
+      reflexivity. }
+  Qed.
+
+  Theorem beq_nat_sym : forall (n m : nat),
+      beq_nat n m = beq_nat m n.
+  Proof.
+    intros n.
+    induction n as [| n'].
+    { intros m.
+      induction m.
+      { reflexivity. }
+      { reflexivity. } }
+    { intros m.
+      induction m.
+      { reflexivity. }
+      { apply IHn'. } }
+  Qed.
+
+End NatList.
 
 
-      
