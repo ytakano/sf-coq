@@ -230,7 +230,7 @@ Proof.
 Qed.
 
 Inductive ev : nat -> Prop :=
-| ev_O : ev O
+| ev_0 : ev O
 | ev_SS : forall n:nat, ev n -> ev (S (S n)).
 
 Theorem four_ev' :
@@ -238,14 +238,14 @@ Theorem four_ev' :
 Proof.
   apply ev_SS.
   apply ev_SS.
-  apply ev_O.
+  apply ev_0.
 Qed.
 
-Check ev_O.
+Check ev_0.
 Check ev_SS.
 
 Definition four_ev : ev 4 :=
-  ev_SS 2 (ev_SS 0 (ev_O)).
+  ev_SS 2 (ev_SS 0 (ev_0)).
 
 Definition ev_plus4 : forall n, ev n -> ev (4 + n) :=
   fun n =>
@@ -266,7 +266,7 @@ Theorem double_even : forall n,
 Proof.
   apply nat_ind.
   { simpl.
-    apply ev_O. }
+    apply ev_0. }
   { intros n H.
     simpl.
     apply ev_SS.
@@ -279,7 +279,7 @@ Proof.
   intros n E.
   destruct E as [| n' E'].
   { simpl.
-    apply ev_O. }
+    apply ev_0. }
   { simpl.
     apply E'. }
 Qed.
@@ -305,7 +305,7 @@ Proof.
   { simpl.
     intros H2.
     induction H2.
-    { apply ev_O. }
+    { apply ev_0. }
     { apply ev_SS.
       apply H2. } }
   { intros H2.
@@ -313,7 +313,7 @@ Proof.
     induction H2.
     { apply ev_SS.
       apply IHev.
-      apply ev_O. }
+      apply ev_0. }
     { apply ev_SS.
       apply IHev.
       apply ev_SS.
@@ -343,7 +343,7 @@ Proof.
   intros n E.
   inversion E as [|n' E'].
   { simpl.
-    apply ev_O. }
+    apply ev_0. }
   { simpl.
     apply E'. }
 Qed.
@@ -517,7 +517,7 @@ Proof.
   apply MyProp_ind.
   { apply ev_SS.
     apply ev_SS.
-    apply ev_O. }
+    apply ev_0. }
   { intros n H1 H2.
     apply ev_plus4.
     apply H2. }
@@ -530,7 +530,7 @@ Qed.
 (*
 Fixpoint MyProp_ev_const (n : nat) (x : ev n) : MyProp n :=
   match x with
-  | ev_O => MyProp3 0 (MyProp3 2 MyProp1)
+  | ev_0 => MyProp3 0 (MyProp3 2 MyProp1)
   | ev_SS n' x' =>
     let plus2 := (ev_SS (S (S n')) (ev_SS n' x')) in
     MyProp3 (S (S n')) (MyProp_ev_const (2 + (S (S n')))
