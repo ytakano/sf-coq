@@ -347,7 +347,7 @@ Proof.
     }
 Qed.
 
-Theorem plus_0_r_firsttry : forall n:nat,
+Theorem plus_0_r : forall n:nat,
     n + 0 = n.
 Proof.
   intros n.
@@ -603,7 +603,7 @@ Theorem mult_1_l : forall n:nat, 1 * n = n.
 Proof.
   intros n.
   simpl.
-  rewrite -> plus_0_r_firsttry.
+  rewrite -> plus_0_r.
   reflexivity.
 Qed.
 
@@ -669,12 +669,12 @@ Proof.
   intros n m.
   induction n.
   { simpl.
-    rewrite -> plus_0_r_firsttry.
+    rewrite -> plus_0_r.
     reflexivity. }
   { simpl.
     induction m.
     { simpl.
-      rewrite -> plus_0_r_firsttry.
+      rewrite -> plus_0_r.
       reflexivity. }
     { simpl.
       rewrite <- IHn.
@@ -742,7 +742,7 @@ Proof.
   { simpl.
     reflexivity. }
   { simpl.
-    rewrite -> plus_0_r_firsttry.
+    rewrite -> plus_0_r.
     rewrite -> plus_n_Sm.
     replace (S (bin_to_nat n)) with (bin_to_nat n + 1).
     rewrite -> plus_assoc.
@@ -750,8 +750,8 @@ Proof.
     { rewrite -> plus_1_r.
       reflexivity. } }
   { simpl.
-    rewrite -> plus_0_r_firsttry.
-    rewrite -> plus_0_r_firsttry.
+    rewrite -> plus_0_r.
+    rewrite -> plus_0_r.
     rewrite -> IHn.
     simpl.
     replace (S (bin_to_nat n)) with (bin_to_nat n + 1).

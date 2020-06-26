@@ -367,13 +367,173 @@ Theorem ev_ev_even : forall n m,
     ev (n + m) -> ev n -> ev m.
 Proof.
   intros n m E1 E2.
-  inversion E1.
-  { apply zero_eq_plus in H0.
-    rewrite -> H0 in E1.
-    simpl in E1.
+  induction E2.
+  { simpl in E1.
     apply E1. }
-  { destruct E2.
-    { simpl in E1.
-      apply E1. }
-    {
-Admitted.
+  { inversion E1.
+    apply IHE2 in H0.
+    apply H0. }
+Qed.
+
+Theorem ev_plus_plus : forall n m p,
+    ev (n + m) -> ev (n + p) -> ev (m + p).
+Proof.
+  intros n m p E1 E2.
+  inversion E2.
+  { apply zero_eq_plus in H0.
+    rewrite -> H0 in E1. simpl in E1.
+    rewrite -> H0 in E2. simpl in E2.
+    apply ev_sum.
+    { apply E1. }
+    { apply E2. } }
+  { inversion E1.
+    { apply zero_eq_plus in H2.
+      rewrite -> H2 in E1. simpl in E1.
+      rewrite -> H2 in E2. simpl in E2.
+      apply ev_sum.
+      { apply E1. }
+      { apply E2. } }
+    { apply ev_SS in H0.
+      apply ev_SS in H2.
+      apply ev_sum with (n := S (S n1)) in H0.
+      rewrite -> H in H0.
+      rewrite -> H1 in H0.
+      rewrite plus_assoc in H0.
+      replace (n + m + n + p) with (n + n + m + p) in H0.
+      { replace (n + n) with (double n).
+        { replace (n + n) with (double n) in H0.
+          { rewrite <- plus_assoc in H0. (* ev (m + p) *)
+            apply ev_ev_even with (n := double n) in H0.
+            { apply H0. }
+            { apply double_even. } } (* ev (double n) *)
+          { apply double_plus. } } (* n + n = double n *)
+        { apply double_plus. } } (* n + n = double n *)
+      { replace (n + n + m) with (n + m + n). (* n + n + m + p = n + m + n + p *)
+        { reflexivity. } (* n + m + n + p = n + m + n + p *)
+        { rewrite <- plus_assoc. (* n + m + n = n + n + n *)
+          replace (m + n) with (n + m).
+          { rewrite plus_assoc. (* n + (n + m) = n + n + m *)
+            reflexivity. }
+          { rewrite plus_comm. (* n + m = m + n *)
+            reflexivity. } } }
+      { apply H2. } } } (* ev (S (S n1)) *)
+Qed.
+
+Inductive MyProp : nat -> Prop :=
+| MyProp1 : MyProp 4
+| MyProp2 : forall n:nat, MyProp n -> MyProp (4 + n)
+| MyProp3 : forall n:nat, MyProp (2 + n) -> MyProp n.
+
+Theorem MyProp_ten : MyProp 10.
+Proof.
+  apply MyProp3. simpl.
+  apply MyProp2.
+  apply MyProp2.
+  apply MyProp1.
+Qed.
+
+Theorem MyProp_0 : MyProp 0.
+Proof.
+  apply MyProp3. simpl.
+  apply MyProp3. simpl.
+  apply MyProp1.
+Qed.
+
+Theorem MyProp_plustwo : forall n:nat, MyProp n -> MyProp (S (S n)).
+Proof.
+  intros n H.
+  apply MyProp3.
+  apply MyProp2 in H.
+  simpl.
+  simpl in H.
+  apply H.
+Qed.
+
+Theorem MyProp_ev : forall n:nat,
+    ev n -> MyProp n.
+Proof.
+  intros n E.
+  induction E as [| n' E'].
+  { apply MyProp_0. }
+  { apply MyProp_plustwo.
+    apply IHE'. }
+Qed.
+
+Theorem plus_assoc' : forall n m p : nat,
+    n + (m + p) = (n + m) + p.
+Proof.
+  intros n m p.
+  induction n as [| n'].
+  { reflexivity. }
+  { simpl.
+    rewrite -> IHn'.
+    reflexivity. }
+Qed.
+
+Theorem plus_comm' : forall n m : nat,
+    n + m = m + n.
+Proof.
+  induction n as [| n'].
+  { intros m.
+    rewrite -> plus_0_r.
+    reflexivity. }
+  { intros m.
+    rewrite <- plus_n_Sm.
+    simpl.
+    rewrite <- IHn'.
+    reflexivity. }
+Qed.
+
+Theorem plus_comm'' : forall n m : nat,
+    n + m = m + n.
+Proof.
+  induction m as [| m'].
+  { simpl.
+    rewrite -> plus_0_r.
+    reflexivity. }
+  { simpl.
+    rewrite <- plus_n_Sm.
+    rewrite <- IHm'.
+    reflexivity. }
+Qed.
+
+Fixpoint true_upto_n__true_everywhere (n : nat) (f : nat -> Prop) : Prop :=
+  match n with
+  | O    => forall m, f m
+  | S n' => f n -> true_upto_n__true_everywhere n' f
+  end.
+
+Eval simpl in true_upto_n__true_everywhere 3 (fun n => even n).
+Eval simpl in even 3 -> even 2 -> even 1 -> forall m : nat, even m.
+
+Example true_upto_n_example :
+  (true_upto_n__true_everywhere 3 (fun n => even n))
+  = (even 3 -> even 2 -> even 1 -> forall m : nat, even m).
+Proof. reflexivity. Qed.
+
+Theorem ev_MyProp' : forall n : nat,
+    MyProp n -> ev n.
+Proof.
+  apply MyProp_ind.
+  { apply ev_SS.
+    apply ev_SS.
+    apply ev_O. }
+  { intros n H1 H2.
+    apply ev_plus4.
+    apply H2. }
+  { intros n H1 H2.
+    apply SSev_even.
+    simpl in H2.
+    apply H2. }
+Qed.
+
+(*
+Fixpoint MyProp_ev_const (n : nat) (x : ev n) : MyProp n :=
+  match x with
+  | ev_O => MyProp3 0 (MyProp3 2 MyProp1)
+  | ev_SS n' x' =>
+    let plus2 := (ev_SS (S (S n')) (ev_SS n' x')) in
+    MyProp3 (S (S n')) (MyProp_ev_const (2 + (S (S n')))
+                                        plus2)
+  end.
+*)
