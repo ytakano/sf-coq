@@ -151,16 +151,439 @@ Proof.
     apply H5. }
 Qed.
 
-Theorem MyProp_iff_ev : forall n, MyProp n <-> ev n.
+Definition MyProp_iff_ev : forall n, MyProp n <-> ev n :=
+  fun n =>
+    conj (fun H : (MyProp n) => ev_MyProp' n H)
+         (fun H : (ev n) => MyProp_ev n H).
+
+Theorem or_commut : forall P Q : Prop,
+    P \/ Q -> Q \/ P.
 Proof.
-  intros n.
-  split.
-  { intros.
-    apply ev_MyProp'.
-    apply H. }
-  { intros.
-    apply MyProp_ev.
-    apply H. }
+  intros P Q H.
+  inversion H as [HP | HQ].
+  { apply or_intror.
+    apply HP. }
+  { apply or_introl.
+    apply HQ. }
 Qed.
 
-Print MyProp_iff_ev.
+Theorem or_commut' : forall P Q : Prop,
+    P \/ Q -> Q \/ P.
+Proof.
+  intros P Q H.
+  inversion H as [HP | HQ].
+  { right.
+    assumption. }
+  { left.
+    assumption. }
+Qed.
+
+Definition or_commut'' : forall (P Q : Prop), P \/ Q -> Q \/ P :=
+  fun (P : Prop) =>
+    fun (Q : Prop) =>
+      fun (H : P \/ Q) =>
+        match H with
+        | or_introl p => or_intror p
+        | or_intror q => or_introl q
+        end.
+
+Theorem or_distributes_over_and_1 : forall P Q R : Prop,
+    P \/ (Q /\ R) -> (P \/ Q) /\ (P \/ R).
+Proof.
+  intros P Q R H.
+  inversion H as [HP | [HQ HR]].
+  { split.
+    { left.
+      assumption. }
+    { left.
+      assumption. } }
+  { split.
+    { right.
+      assumption. }
+    { right.
+      assumption. } }
+Qed.
+
+Theorem or_distributes_over_and_2 : forall P Q R : Prop,
+    (P \/ Q) /\ (P \/ R) -> P \/ (Q /\ R).
+Proof.
+  intros P Q R H.
+  inversion H.
+  inversion H0.
+  { left.
+    assumption. }
+  { inversion H1.
+    { left.
+      assumption. }
+    { right.
+      apply conj.
+      { assumption. }
+      { assumption. } } }
+Qed.
+
+Theorem or_distributes_over_and : forall P Q R : Prop,
+    P \/ (Q /\ R) <-> (P \/ Q) /\ (P \/ R).
+Proof.
+  intros P Q R.
+  split.
+  { apply or_distributes_over_and_1. }
+  { apply or_distributes_over_and_2. }
+Qed.
+
+Theorem andb_true__and : forall b c,
+    andb b c = true -> b = true /\ c = true.
+Proof.
+  intros b c H.
+  split.
+  { destruct b.
+    { reflexivity. }
+    { inversion H. } }
+  { destruct c.
+    { reflexivity. }
+    { destruct b.
+      { inversion H. }
+      { inversion H. } } }
+Qed.
+
+Theorem and__andb_false : forall b c,
+    b = true /\ c = true -> andb b c = true.
+Proof.
+  intros b c H.
+  inversion H.
+  rewrite H0.
+  rewrite H1.
+  reflexivity.
+Qed.
+
+Theorem andb_false : forall b c,
+    andb b c = false -> b = false \/ c = false.
+Proof.
+  intros b c H.
+  destruct b.
+  { inversion H.
+    destruct c.
+    { inversion H. }
+    { simpl in H.
+      right.
+      assumption. } }
+  { simpl in H.
+    left.
+    assumption. }
+Qed.
+
+Theorem orb_true : forall b c,
+    orb b c = true -> b = true \/ c = true.
+Proof.
+  intros b c H.
+  destruct b.
+  { simpl in H.
+    left.
+    assumption. }
+  { simpl in H.
+    right.
+    assumption. }
+Qed.
+
+Theorem orb_false : forall b c,
+    orb b c = false -> b = false /\ c = false.
+Proof.
+  intros b c H.
+  split.
+  { destruct b.
+    { simpl in H.
+      discriminate. }
+    { reflexivity. } }
+  { destruct b.
+    { simpl in H.
+      discriminate. }
+    { simpl in H.
+      assumption.  } }
+Qed.
+
+Theorem False_implies_nonsenc : False -> 2 + 2 = 5.
+Proof.
+  intros.
+  inversion H.
+Qed.
+
+Theorem nonsense_implies_False : 2 + 2 = 5 -> False.
+Proof.
+  intros.
+  discriminate.
+Qed.
+
+Theorem ex_falso_quodlibet : forall (P : Prop),
+    False -> P.
+Proof.
+  intros P contra.
+  inversion contra.
+Qed.
+
+Print True.
+
+Check True_ind.
+
+Print not.
+
+Theorem not_false : ~False.
+Proof.
+  unfold not.
+  intros.
+  inversion H.
+Qed.
+
+Theorem contradiction_implies_anything : forall P Q : Prop,
+    (P /\ ~P) -> Q.
+Proof.
+  intros P Q H.
+  inversion H.
+  unfold not in H1.
+  apply H1 in H0.
+  inversion H0.
+Qed.
+
+Theorem double_neg : forall P : Prop,
+    P -> ~~P.
+Proof.
+  intros P H.
+  unfold not.
+  intros.
+  apply H0 in H.
+  inversion H.
+Qed.
+
+Theorem contrapositive : forall P Q : Prop,
+    (P -> Q) -> (~Q -> ~P).
+Proof.
+  intros P Q H1 H2.
+  unfold not.
+  unfold not in H2.
+  intros HN.
+  apply H1 in HN.
+  apply H2 in HN.
+  inversion HN.
+Qed.
+
+Theorem not_both_true_and_false : forall P : Prop,
+    ~ (P /\ ~P).
+Proof.
+  intros P.
+  unfold not.
+  intros H.
+  inversion H.
+  apply H1 in H0.
+  inversion H0.
+Qed.
+
+Theorem five_not_even :
+  ~ ev 5.
+Proof.
+  unfold not.
+  intros.
+  inversion H.
+  inversion H1.
+  inversion H3.
+Qed.
+
+Theorem ev_not_ev_S : forall n,
+    ev n -> ~ ev (S n).
+Proof.
+  unfold not.
+  intros n H.
+  induction H.
+  { intros.
+    inversion H. }
+  { intros.
+    apply SSev_even in H0.
+    apply IHev in H0.
+    inversion H0. }
+Qed.
+
+(*
+Definition peirce := forall P Q : Prop,
+    ((P -> Q) -> P) -> P.
+
+Definition classic := forall P : Prop,
+    ~~P -> P.
+
+Definition excluded_middle := forall P : Prop,
+    P \/ ~P.
+ *)
+
+Theorem not_false_then_true : forall b : bool,
+    b <> false -> b = true.
+Proof.
+  intros b H.
+  destruct b.
+  { reflexivity. }
+  { unfold not in H.
+    apply ex_falso_quodlibet.
+    apply H.
+    reflexivity. }
+Qed.
+
+Theorem not_eq_beq_false : forall n n' : nat,
+    n <> n' -> beq_nat n n' = false.
+Proof.
+  induction n.
+  { intros n' H.
+    destruct n'.
+    { unfold not in H.
+      apply ex_falso_quodlibet.
+      apply H.
+      reflexivity. }
+    { simpl.
+      reflexivity. } }
+  { intros n' H.
+    induction n'.
+    { reflexivity. }
+    { simpl.
+      apply IHn.
+      unfold not.
+      intros.
+      unfold not in H.
+      rewrite <- H0 in H.
+      apply H.
+      reflexivity. } }
+Qed.
+
+Theorem beq_false_not_eq : forall n m,
+    false = beq_nat n m -> n <> m.
+Proof.
+  induction n.
+  { intros m H.
+    unfold not.
+    intros.
+    rewrite <- H0 in H.
+    simpl in H.
+    discriminate. }
+  { intros m H.
+    unfold not.
+    intros.
+    rewrite <- H0 in H.
+    simpl in H.
+    apply IHn in H.
+    unfold not in H.
+    apply H.
+    reflexivity. }
+Qed.
+
+Print ex.
+
+Example exists_example_1 : exists n, n + (n * n) = 6.
+Proof.
+  apply ex_intro with (x := 2).
+  reflexivity.
+Qed.
+
+Print exists_example_1.
+Check ex_intro.
+Print ex.
+
+Example exsits_example_1' : exists n, n + (n * n) = 6.
+Proof.
+  exists 2.
+  reflexivity.
+Qed.
+
+Theorem exists_example_2 : forall n,
+    (exists m, n = 4 + m) -> (exists o, n = 2 + o).
+Proof.
+  intros n H.
+  inversion H as [m Hm].
+  exists (2 + m).
+  apply Hm.
+Qed.
+
+Theorem dist_not_exists : forall (X : Type) (P : X -> Prop),
+    (forall x, P x) -> ~ (exists x, ~ P x).
+Proof.
+  intros X P H.
+  unfold not.
+  intros.
+  inversion H0.
+  apply H1.
+  apply H.
+Qed.
+
+Definition excluded_middle := forall P : Prop,
+    P \/ ~P.
+
+Theorem not_exists_dist : excluded_middle -> forall (X : Type) (P : X -> Prop),
+      ~ (exists x, ~ P x) -> (forall x, P x).
+Proof.
+  intros EX X P H x.
+  unfold excluded_middle in EX.
+  unfold not in H.
+  assert (P x \/ ~ P x).
+  { apply EX. }
+  { inversion H0.
+    { apply H1. }
+    { apply ex_falso_quodlibet.
+      apply H.
+      exists x.
+      unfold not in H1.
+      apply H1. } }
+Qed.
+
+Theorem dist_exists_or : forall (X : Type) (P Q : X -> Prop),
+    (exists x, P x \/ Q x) <-> (exists x, P x) \/ (exists x, Q x).
+Proof.
+  intros X P Q.
+  split.
+  { intros.
+    inversion H.
+    inversion H0.
+    { left.
+      exists x.
+      assumption. }
+    { right.
+      exists x.
+      assumption. } }
+  { intros.
+    inversion H.
+    { inversion H0.
+      exists x.
+      left.
+      assumption. }
+    { inversion H0.
+      exists x.
+      right.
+      assumption. } }
+Qed.
+
+Module MyEquality.
+  Inductive eq (X : Type) : X -> X -> Prop :=
+    refl_equal : forall x, eq X x x.
+
+  Notation "x = y" := (eq _ x y) (at level 70, no associativity) : type_scope.
+
+  Inductive eq' (X : Type) (x : X) : X -> Prop :=
+    refl_equal' : eq' X x x.
+
+  Notation "x =' y" := (eq' _ x y) (at level 70, no associativity) : type_scope.
+
+  Theorem two_defs_of_eq_coincide : forall (X : Type) (x y : X),
+      x = y <-> x =' y.
+  Proof.
+    intros TX x y.
+    split.
+    { intros.
+      inversion H.
+      apply refl_equal'. }
+    { intros.
+      inversion H.
+      apply refl_equal. }
+  Qed.
+
+  Check eq'_ind.
+
+  Definition four : 2 + 2 = 1 + 3 :=
+    refl_equal nat 4.
+
+  Definition singleton : forall (X : Set) (x : X), [] ++ [x] = x :: [] :=
+    fun (X : Set) (x : X) => refl_equal (list X) [x].
+
+  Check singleton.
+
+End MyEquality.
