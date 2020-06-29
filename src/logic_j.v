@@ -587,3 +587,147 @@ Module MyEquality.
   Check singleton.
 
 End MyEquality.
+
+Module LeFirstTry.
+  Inductive le : nat -> nat -> Prop :=
+  | le_n : forall n, le n n
+  | le_S : forall n m, (le n m) -> (le n (S m)).
+End LeFirstTry.
+
+Check le_ind.
+
+Theorem test_le1 :
+  3 <= 3.
+Proof.
+  apply le_n.
+Qed.
+
+Theorem test_le2 :
+  3 <= 6.
+Proof.
+  apply le_S.
+  apply le_S.
+  apply le_S.
+  apply le_n.
+Qed.
+
+Theorem test_le3 :
+  ~ (2 <= 1).
+Proof.
+  intros H.
+  inversion H.
+  inversion H1.
+Qed.
+
+Inductive square_of : nat -> nat -> Prop :=
+  sq : forall n:nat, square_of n (n * n).
+
+Inductive next_nat (n : nat) : nat -> Prop :=
+| nn : next_nat n (S n).
+
+Inductive next_even (n : nat) : nat -> Prop :=
+| ne_1 : ev (S n) -> next_even n (S n)
+| ne_2 : ev (S (S n)) -> next_even n (S (S n)).
+
+
+Module R.
+  Inductive R : nat -> nat -> nat -> Prop :=
+  | c1 : R 0 0 0
+  | c2 : forall m n o, R m n o -> R (S m) n (S o)
+  | c3 : forall m n o, R m n o -> R m (S n) (S o)
+  | c4 : forall m n o, R (S m) (S n) (S (S o)) -> R m n o
+  | c5 : forall m n o, R m n o -> R n m o.
+End R.
+
+Inductive all (X : Type) (P : X -> Prop) : list X -> Prop :=
+| all_nil  : all X P []
+| all_cons : forall x, P x -> forall l, all X P l -> all X P (x :: l).
+
+Check all_nil nat ev.
+
+Print eq_refl.
+
+Theorem all_x : forall (X : Type) (test : X -> bool) (x : X) (l : list X),
+    forallb test (x :: l) = true -> test x = true.
+Proof.
+  intros X test x l H.
+  inversion H.
+  apply andb_true_elim1 in H.
+  rewrite -> H.
+  simpl.
+  rewrite -> H in H1.
+  simpl in H1.
+  symmetry.
+  assumption.
+Qed.
+
+Theorem all_eq_forallb :
+  forall (X : Type) (test : X -> bool) (P : X -> Prop) (l : list X),
+    forallb test l = true -> all X (fun x => true = test x) l.
+Proof.
+  induction l.
+  { intros.
+    apply all_nil. }
+  { intros.
+    apply all_cons.
+    { apply all_x in H.
+      symmetry.
+      assumption. }
+    { apply IHl.
+      simpl in H.
+      apply andb_true_elim2 in H.
+      assumption. } }
+Qed.
+
+Inductive appears_in {X : Type} (a : X) : list X -> Prop :=
+| ai_here : forall l, appears_in a (a :: l)
+| ai_later : forall b l, appears_in a l -> appears_in a (b :: l).
+
+Theorem appears_in__ex : forall (X : Type) (a : X) (l : list X),
+    appears_in a l -> ~ all X (fun x => x <> a) l.
+Proof.
+  intros X a l H.
+  induction H.
+  { unfold not.
+    intros.
+    inversion H.
+    apply H2.
+    apply eq_refl. }
+  { unfold not.
+    intros.
+    inversion H0.
+    unfold not in IHappears_in.
+    apply IHappears_in.
+    assumption. }
+Qed.
+
+Theorem app_nil_end : forall (X : Type) (l : list X),
+    l ++ [] = l.
+Proof.
+  intros X l.
+  induction l.
+  { reflexivity. }
+  { simpl.
+    rewrite -> IHl.
+    reflexivity. }
+Qed.
+
+Lemma appears_in_app : forall {X : Type} (xs ys : list X) (x : X),
+    appears_in x (xs ++ ys) -> appears_in x xs \/ appears_in x ys.
+Proof.
+  intros X xs ys x H.
+  induction xs.
+  { simpl in H.
+    right.
+    assumption. }
+  { inversion H.
+    { left.
+      apply ai_here. }
+    { apply IHxs in H1.
+      inversion H1.
+      { left.
+        apply ai_later.
+        assumption. }
+      { right.
+        assumption. } } }
+Qed.
