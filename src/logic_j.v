@@ -731,3 +731,85 @@ Proof.
       { right.
         assumption. } } }
 Qed.
+
+Theorem app_n : forall (X : Type) (l1 l2:list X) (n : X),
+    (n :: l1) ++ l2 = n :: l1 ++ l2.
+Proof.
+  intros X l1 l2 n.
+  simpl.
+  reflexivity.
+Qed.
+
+Lemma appers_l__l_app : forall (X : Type) (xs ys : list X) (x : X),
+    appears_in x xs -> appears_in x (xs ++ ys).
+Proof.
+  induction xs.
+  { intros ys x H.
+    inversion H. }
+  { intros ys x0 H.
+    rewrite app_n.
+    inversion H.
+    { apply ai_here. }
+    { apply ai_later.
+      apply IHxs.
+      assumption. } }
+Qed.
+
+Lemma app_appears_in : forall {X : Type} (xs ys : list X) (x : X),
+    appears_in x xs \/ appears_in x ys -> appears_in x (xs ++ ys).
+Proof.
+  induction xs.
+  { intros ys x H.
+    destruct H.
+    { inversion H. }
+    { assumption. } }
+  { intros ys x0 H.
+    inversion H.
+    { apply appers_l__l_app.
+      assumption. }
+    { rewrite app_n.
+      apply ai_later.
+      apply IHxs.
+      right.
+      assumption. } }
+Qed.
+
+Inductive disjoint {X : Type} : list X -> list X -> Prop :=
+| disj_nil : disjoint [] []
+| disj_cons1 : forall a xs ys, disjoint xs ys -> ~ (appears_in a xs) -> disjoint xs (a :: ys)
+| disj_cons2 : forall a xs ys, disjoint xs ys -> ~ (appears_in a ys) -> disjoint (a :: xs) ys.
+
+Inductive no_repeats {X : Type} : list X -> Prop :=
+| no_rep_nil : no_repeats []
+| no_rep_cons : forall a l, no_repeats l -> ~ (appears_in a l) -> no_repeats (a :: l).
+
+Example no_repeats_ex1 : no_repeats [1, 2, 3, 4].
+Proof.
+  apply no_rep_cons.
+  apply no_rep_cons.
+  apply no_rep_cons.
+  apply no_rep_cons.
+  apply no_rep_nil.
+
+  unfold not.
+  intros.
+  inversion H.
+
+  unfold not.
+  intros.
+  inversion H.
+  inversion H1.
+
+  unfold not.
+  intros.
+  inversion H.
+  inversion H1.
+  inversion H4.
+
+  unfold not.
+  intros.
+  inversion H.
+  inversion H1.
+  inversion H4.
+  inversion H7.
+Qed.
