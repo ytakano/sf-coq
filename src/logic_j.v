@@ -813,3 +813,155 @@ Proof.
   inversion H4.
   inversion H7.
 Qed.
+
+Theorem O_le_n : forall n,
+    0 <= n.
+Proof.
+  induction n.
+  { apply le_n. }
+  { apply le_S.
+    assumption. }
+Qed.
+
+Theorem n_le_m__Sn_le_Sm : forall n m,
+    n <= m -> S n <= S m.
+Proof.
+  induction n.
+  { intros m H.
+    induction m.
+    { constructor. }
+    { constructor.
+      apply IHm.
+      apply O_le_n. } }
+  { intros m H.
+    induction m.
+    { inversion H. }
+    { inversion H.
+      { constructor. }
+      { constructor.
+        apply IHm.
+        assumption. } } }
+Qed.
+
+Theorem Sn_le_Sm__n_le_m : forall n m,
+    S n <= S m -> n <= m.
+Proof.
+  induction n.
+  { intros m H.
+    apply O_le_n. }
+  { induction m.
+    { intros.
+      inversion H.
+      inversion H1. }
+    { intros.
+      inversion H.
+      { constructor. }
+      { constructor.
+        apply IHm.
+        assumption. } } }
+Qed.
+
+Theorem le_plus_l : forall a b,
+    a <= a + b.
+Proof.
+  induction a.
+  { simpl.
+    intros b.
+    apply O_le_n. }
+  { intros b.
+    simpl.
+    apply n_le_m__Sn_le_Sm.
+    apply IHa. }
+Qed.
+
+Theorem O_l_Sn : forall n,
+    0 < S n.
+Proof.
+  intros.
+  induction n.
+  { constructor. }
+  { constructor.
+    inversion IHn.
+    { constructor. }
+    { constructor.
+      assumption. } }
+Qed.
+
+Theorem plus_S_l : forall n1 n2 m,
+    S n1 + S n2 < S m -> n1 + n2 < m.
+Proof.
+  induction n1.
+  { induction n2.
+    { intros m H.
+      simpl in H.
+      simpl.
+      induction m.
+      { inversion H.
+        inversion H1. }
+      { apply O_l_Sn. } }
+    { induction m.
+      { intros.
+        inversion H.
+        inversion H1. }
+      { intros.
+        simpl.
+        simpl in H.
+        simpl in IHm.
+        simpl in IHn2.
+        inversion H.
+        { constructor.
+          constructor. }
+        {
+
+
+Theorem plus_lt : forall n1 n2 m,
+    n1 + n2 < m -> n1 < m /\ n2 < m.
+Proof.
+  induction n1.
+  { intros n2 m H.
+    { simpl in H.
+      induction m.
+      { simpl.
+        inversion H. }
+      { inversion H.
+        { split.
+          { apply O_l_Sn. }
+          { rewrite -> H1 in H.
+            assumption. } }
+        { split.
+          { apply O_l_Sn. }
+          { constructor.
+            assumption. } } } } }
+  { induction n2.
+    { intros m H.
+      rewrite plus_comm in H.
+      simpl in H.
+      split.
+      { assumption. }
+      { inversion H.
+        { constructor.
+          apply n_le_m__Sn_le_Sm.
+          apply O_le_n. }
+        { apply O_l_Sn. } } }
+    { induction m.
+      { intros H.
+        inversion H. }
+      { intros H.
+        inversion H.
+        { split.
+          { constructor.
+            apply n_le_m__Sn_le_Sm.
+            rewrite plus_comm.
+            simpl.
+            apply n_le_m__Sn_le_Sm.
+            rewrite plus_comm.
+            apply le_plus_l. }
+          { apply n_le_m__Sn_le_Sm.
+            apply n_le_m__Sn_le_Sm.
+            rewrite plus_comm.
+            simpl.
+            constructor.
+            apply le_plus_l. } }
+        { replace (S n1 < S m) with (n1 < m).
+          { replace (S n2 < S m) with (n2 < m).
+            { apply IHn1.
