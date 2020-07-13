@@ -1069,3 +1069,90 @@ Proof.
         { apply n_l_m__Sn_l_Sm.
           assumption. } } } }
 Qed.
+
+Theorem lt_S : forall n m,
+    n < m -> n < S m.
+Proof.
+  induction n.
+  { intros m H.
+    apply O_l_Sn. }
+  { induction m.
+    { intros.
+      inversion H. }
+    { intros.
+      apply n_l_m__Sn_l_Sm.
+      apply IHn.
+      apply Sn_l_Sm__n_l_m.
+      assumption. } }
+Qed.
+
+Theorem ble_nat_true : forall n m,
+    ble_nat n m = true -> n <= m.
+Proof.
+  induction n.
+  { intros m H.
+    apply O_le_n. }
+  { induction m.
+    { intros.
+      inversion H. }
+    { intros.
+      apply n_le_m__Sn_le_Sm.
+      apply IHn.
+      inversion H.
+      reflexivity. } }
+Qed.
+
+Theorem ble_nat_n_m_false__Sn_Sm_false : forall n m,
+    ble_nat n m = false -> ble_nat (S n) (S m) = false.
+Proof.
+  induction n.
+  { intros.
+    inversion H. }
+  { induction m.
+    { intros.
+      unfold ble_nat.
+      reflexivity. }
+    { intros.
+      simpl.
+      inversion H.
+      reflexivity. } }
+Qed.
+
+Theorem ble_nat_n_Sn_false : forall n m,
+    ble_nat n (S m) = false -> ble_nat n m = false.
+Proof.
+  induction n.
+  { intros m H.
+    inversion H. }
+  { induction m.
+    { intros.
+      unfold ble_nat.
+      reflexivity. }
+    { intros.
+      simpl.
+      apply IHn.
+      inversion H.
+      reflexivity. } }
+Qed.
+
+Theorem ble_nat_false : forall n m,
+    ble_nat n m = false -> ~(n <= m).
+Proof.
+  induction n.
+  { intros m H.
+    inversion H. }
+  { induction m.
+    { intros.
+      unfold not.
+      intros.
+      inversion H0. }
+    { intros.
+      unfold not.
+      intros.
+      unfold not in IHn.
+      simpl in H.
+      apply IHn in H.
+      { assumption. }
+      { apply Sn_le_Sm__n_le_m.
+        assumption. } } }
+Qed.
