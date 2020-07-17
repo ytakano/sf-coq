@@ -1,4 +1,5 @@
 Require Export prop_j.
+Require Export gen_j.
 
 Definition funny_prop1 := forall n, forall (E : ev n), ev (n + 4).
 
@@ -1156,3 +1157,147 @@ Proof.
       { apply Sn_le_Sm__n_le_m.
         assumption. } } }
 Qed.
+
+Inductive nostutter: list nat -> Prop :=
+| nos_nil : nostutter []
+| nos_one : forall n, nostutter [n]
+| nos_cons : forall n m l, n <> m -> nostutter (m :: l) -> nostutter (n :: m :: l).
+
+Example test_nostutter_1: nostutter [3, 1, 4, 1, 5, 6].
+Proof.
+  constructor; unfold not; intros. discriminate.
+  constructor; unfold not; intros. discriminate.
+  constructor; unfold not; intros. discriminate.
+  constructor; unfold not; intros. discriminate.
+  constructor; unfold not; intros. discriminate.
+  constructor.
+Qed.
+
+Example test_nostutter_2: nostutter [].
+Proof. constructor. Qed.
+
+Example test_nostutter_3: nostutter [5].
+Proof. constructor. Qed.
+
+Example test_nostutter_4: not (nostutter [3, 1, 1, 4]).
+Proof.
+  unfold not.
+  intros.
+  inversion H.
+  inversion H4.
+  unfold not in H7.
+  apply H7.
+  reflexivity.
+Qed.
+
+Theorem n_eq_m__Sn_eq_Sm: forall n m,
+    n = m -> S n = S m.
+Proof.
+  induction n.
+  { intros m H.
+    rewrite H.
+    reflexivity. }
+  { intros m H.
+    rewrite H.
+    reflexivity. }
+Qed.
+
+Lemma app_length: forall {X : Type} (l1 l2 : list X),
+    length (l1 ++ l2) = length l1 + length l2.
+Proof.
+  induction l1.
+  { induction l2.
+    { simpl.
+      reflexivity. }
+    { simpl.
+      reflexivity. } }
+  { induction l2.
+    { simpl.
+      rewrite app_nil_end.
+      rewrite plus_0_r.
+      reflexivity. }
+    { simpl.
+      rewrite plus_comm.
+      apply n_eq_m__Sn_eq_Sm.
+      apply app_length_cons_2.
+      simpl.
+      apply n_eq_m__Sn_eq_Sm.
+      rewrite plus_comm.
+      apply IHl1. } }
+Qed.
+
+Lemma appears_in_app_split: forall {X : Type} (x : X) (l : list X),
+    appears_in x l -> exists l1, exists l2, l = l1 ++ (x :: l2).
+Proof.
+  intros X x l H.
+  induction H.
+  { exists [].
+    exists l.
+    simpl.
+    reflexivity. }
+  { destruct IHappears_in.
+    destruct H0.
+    exists (b :: x0).
+    exists x1.
+    simpl.
+    rewrite H0.
+    reflexivity. }
+Qed.
+
+Inductive repeats {X : Type}: list X -> Prop :=
+| rep_1: forall n l, appears_in n l -> repeats (n :: l)
+| rep_2: forall n l, repeats l -> repeats (n :: l).
+
+Theorem len_0__nil: forall {X : Type} (l : list X),
+    length l = 0 -> l = [].
+Proof.
+  induction l.
+  { simpl.
+    intros.
+    reflexivity. }
+  { intros.
+    inversion H. }
+Qed.
+
+Theorem repeats_cons: forall {X : Type} (x : X) (l : list X),
+    repeats l -> repeats (x :: l).
+Proof.
+  induction l.
+  { intros.
+    inversion H. }
+  { intros.
+    apply rep_2 with (n := x) in H.
+    assumption. }
+Qed.
+
+Theorem not_repeats: forall {X : Type} (x : X) (l : list X),
+    ~ repeats (x :: l) -> ~ repeats l.
+Proof.
+  induction l.
+  { intros.
+    unfold not.
+    intros.
+    inversion H0. }
+  { intros.
+    unfold not in H.
+    unfold not.
+    unfold not in IHl.
+    intros.
+    apply H.
+    apply repeats_cons.
+    assumption. }
+Qed.
+
+Theorem pigeonhole_principle: forall {X : Type} (l1 l2 : list X),
+    excluded_middle ->
+    (forall x, appears_in x l1 -> appears_in x l2) ->
+    length l2 < length l1 ->
+    repeats l1.
+Proof.
+  induction l1.
+  { intros.
+    inversion H1. }
+  { induction l2.
+    { intros EX.
+      intros.
+Admitted.
