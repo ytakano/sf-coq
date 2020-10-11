@@ -199,40 +199,40 @@ Module AExp.
     omega.
   Qed.
 
-  Reserved Notation "e '\\' n" (at level 90, left associativity).
+  Reserved Notation "e '==>' n" (at level 90, left associativity).
 
   Inductive aevalR : aexp -> nat -> Prop :=
   | E_ANum (n : nat) :
-      (ANum n) \\ n
+      (ANum n) ==> n
   | E_APlus (e1 e2 : aexp) (n1 n2 : nat) :
-      (e1 \\ n1) -> (e2 \\ n2) -> (APlus e1 e2) \\ (n1 + n2)
+      (e1 ==> n1) -> (e2 ==> n2) -> (APlus e1 e2) ==> (n1 + n2)
   | E_AMinus (e1 e2 : aexp) (n1 n2 : nat) :
-      (e1 \\ n1) -> (e2 \\ n2) -> (AMinus e1 e2) \\ (n1 - n2)
+      (e1 ==> n1) -> (e2 ==> n2) -> (AMinus e1 e2) ==> (n1 - n2)
   | E_AMult (e1 e2 : aexp) (n1 n2 : nat) :
-      (e1 \\ n1) -> (e2 \\ n2) -> (AMult e1 e2) \\ (n1 * n2)
-  where "e '\\' n" := (aevalR e n) : type_scope.
+      (e1 ==> n1) -> (e2 ==> n2) -> (AMult e1 e2) ==> (n1 * n2)
+  where "e '==>' n" := (aevalR e n) : type_scope.
 
-  Reserved Notation "e '\\@' n" (at level 90, left associativity).
+  Reserved Notation "e '==>b' b" (at level 90, left associativity).
 
   Inductive bevalR : bexp -> bool -> Prop :=
   | E_BTrue (n : bool) :
-      BTrue \\@ true
+      BTrue ==>b true
   | E_BFalse (n : bool) :
-      BFalse \\@ false
+      BFalse ==>b false
   | E_BEq (e1 e2 : aexp) (n1 n2 : nat) :
-      (e1 \\ n1) -> (e2 \\ n2) -> (BEq e1 e2) \\@ n1 =? n2
+      (e1 ==> n1) -> (e2 ==> n2) -> (BEq e1 e2) ==>b n1 =? n2
   | E_BLe (e1 e2 : aexp) (n1 n2 : nat) :
-      (e1 \\ n1) -> (e2 \\ n2) -> (BLe e1 e2) \\@ n1 <=? n2
+      (e1 ==> n1) -> (e2 ==> n2) -> (BLe e1 e2) ==>b n1 <=? n2
   | E_BNot (e : bexp) (n : bool) :
-      (e \\@ n) -> (BNot e) \\@ (negb n)
+      (e ==>b n) -> (BNot e) ==>b (negb n)
   | E_BAnd (e1 e2 : bexp) (n1 n2 : bool) :
-      (e1 \\@ n1) -> (e2 \\@ n2) -> (BAnd e1 e2) \\@ (andb n1 n2)
-  where "e '\\@' n" := (bevalR e n) : type_scope.
+      (e1 ==>b n1) -> (e2 ==>b n2) -> (BAnd e1 e2) ==>b (andb n1 n2)
+  where "e '==>b' b" := (bevalR e b) : type_scope.
 
   Definition manual_grade_for_beval_rules : option (nat * string) := None.
 
   Theorem aeval_iff_aevalR : forall a n,
-      (a \\ n) <-> aeval a = n.
+      (a ==> n) <-> aeval a = n.
   Proof.
     split.
     { intros.
@@ -249,4 +249,45 @@ Module AExp.
         try (constructor;
              try (apply IHa1; reflexivity);
              try (apply IHa2; reflexivity)). }
+  Qed.
+
+  Theorem aeval_iff_aevalR' : forall a n,
+      (a ==> n) <-> aeval a = n.
+  Proof.
+    split.
+    { intros H; induction H; subst; reflexivity. }
+    { generalize dependent n.
+      induction a; simpl; intros; subst; constructor;
+        try apply IHa1; try apply IHa2; reflexivity. }
+  Qed.
+
+  Lemma beval_bnot_n : forall b,
+      beval (BNot b) = negb (beval b).
+  Proof.
+    intros.
+    destruct b; simpl; reflexivity.
+  Qed.
+
+  Lemma beval_iff_bevalR : forall b bv,
+      b ==>b bv <-> beval b = bv.
+  Proof.
+    split.
+    { intros.
+      induction H; simpl; try reflexivity;
+        try (apply aeval_iff_aevalR in H;
+             apply aeval_iff_aevalR in H0);
+        try (subst;
+             reflexivity). }
+    { intros.
+      subst bv.
+      induction b;
+        try (constructor;
+             constructor);
+        try (simpl;
+             constructor;
+             apply aeval_iff_aevalR;
+             reflexivity);
+        try (simpl;
+             constructor;
+             repeat assumption).
   Qed.
