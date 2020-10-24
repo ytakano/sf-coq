@@ -289,5 +289,291 @@ Module AExp.
              reflexivity);
         try (simpl;
              constructor;
-             repeat assumption).
+             repeat assumption). }
   Qed.
+
+End AExp.
+
+Definition state := total_map nat.
+
+Inductive aexp : Type :=
+| ANum (n : nat)
+| AId (x : string)
+| APlus (a1 a2 : aexp)
+| AMinus (a1 a2 : aexp)
+| AMult (a1 a2 : aexp).
+
+Definition W : string := "W".
+Definition X : string := "X".
+Definition Y : string := "Y".
+Definition Z : string := "Z".
+
+Inductive bexp : Type :=
+| BTrue
+| BFalse
+| BEq (a1 a2 : aexp)
+| BLe (a1 a2 : aexp)
+| BNot (b : bexp)
+| BAnd (b1 b2 : bexp).
+
+Coercion AId : string >-> aexp.
+Coercion ANum : nat >-> aexp.
+
+Declare Custom Entry com.
+Declare Scope com_scope.
+Notation "<{ e }>" := e (at level 0, e custom com at level 99) : com_scope.
+Notation "( x )" := x (in custom com, x at level 99) : com_scope.
+Notation "x" := x (in custom com at level 0, x constr at level 0) : com_scope.
+Notation "f x .. y" := (.. (f x) .. y)
+                         (in custom com at level 0, only parsing,
+                             f constr at level 0, x constr at level 9,
+                             y constr at level 9) : com_scope.
+Notation "x + y" := (APlus x y) (in custom com at level 50, left associativity).
+Notation "x - y" := (AMinus x y) (in custom com at level 50, left associativity).
+Notation "x * y" := (AMult x y) (in custom com at level 40, left associativity).
+Notation "'true'" := true (at level 1).
+Notation "'true'" := BTrue (in custom com at level 0).
+Notation "'false'" := false (at level 1).
+Notation "'false'" := BFalse (in custom com at level 0).
+Notation "x <= y" := (BLe x y) (in custom com at level 70, no associativity).
+Notation "x = y" := (BEq x y) (in custom com at level 70, no associativity).
+Notation "x && y" := (BAnd x y) (in custom com at level 80, left associativity).
+Notation "'~' b" := (BNot b) (in custom com at level 75, right associativity).
+
+Open Scope com_scope.
+
+Definition example_aexp : aexp := <{ 3 + (X * 2) }>.
+Definition example_bexp : bexp := <{ true && ~(X <= 4) }>.
+
+Print example_aexp.
+Print example_bexp.
+
+Set Printing Coercions.
+Print example_bexp.
+Unset Printing Coercions.
+
+Fixpoint aeval (st : state) (a : aexp) : nat :=
+  match a with
+  | ANum n => n
+  | AId x => st x
+  | <{a1 + a2}> => (aeval st a1) + (aeval st a2)
+  | <{a1 - a2}> => (aeval st a1) - (aeval st a2)
+  | <{a1 * a2}> => (aeval st a1) * (aeval st a2)
+  end.
+
+Fixpoint beval (st : state) (b : bexp) : bool :=
+  match b with
+  | <{true}> => true
+  | <{false}> => false
+  | <{a1 = a2}> => (aeval st a1) =? (aeval st a2)
+  | <{a1 <= a2}> => (aeval st a1) <=? (aeval st a2)
+  | <{~ b1}> => negb (beval st b1)
+  | <{b1 && b2}> => andb (beval st b1) (beval st b2)
+  end.
+
+Definition empty_st := (_ !-> 0).
+
+Notation "x '!->' v" := (t_update empty_st x v) (at level 100).
+
+Example aexp1 : aeval (X !-> 5) <{ (3 + (X * 2))}> = 13.
+Proof. reflexivity. Qed.
+
+Example bexp1 : beval (X !-> 5) <{ true && ~(X <= 4)}> = true.
+Proof. reflexivity. Qed.
+
+Inductive com : Type :=
+| CSkip
+| CAss (x : string) (a : aexp)
+| CSeq (c1 c2 : com)
+| CIf (b : bexp) (c1 c2 : com)
+| CWhile (b : bexp) (c : com).
+
+Notation "'skip'" := CSkip (in custom com at level 0) : com_scope.
+Notation "x := y" := (CAss x y)
+                       (in custom com at level 0, x constr at level 0,
+                           y at level 85, no associativity) : com_scope.
+Notation "x ; y" := (CSeq x y)
+                      (in custom com at level 90, right associativity) : com_scope.
+Notation "'if' x 'then' y 'else' z 'end'" :=
+  (CIf x y z)
+    (in custom com at level 89, x at level 99,
+        y at level 99, z at level 99) : com_scope.
+Notation "'while' x 'do' y 'end'" :=
+  (CWhile x y)
+    (in custom com at level 89, x at level 99, y at level 99) : com_scope.
+
+Definition fact_in_coq : com :=
+  <{ Z := X;
+     Y := 1;
+     while ~(Z = 0) do
+       Y := Y * Z;
+       Z := Z - 1
+     end }>.
+
+Print fact_in_coq.
+
+Unset Printing Notations.
+Print fact_in_coq.
+Set Printing Notations.
+
+Set Printing Coercions.
+Print fact_in_coq.
+Unset Printing Coercions.
+
+Locate "&&".
+Locate ";".
+Locate "while".
+Locate aexp.
+
+Definition plus2 : com :=
+  <{ X := X + 2 }>.
+
+Definition XtimesYinZ : com :=
+  <{ Z := X * Y }>.
+
+Definition subtract_slowly_body : com :=
+  <{ Z := Z - 1 ;
+     X := X - 1}>.
+
+Definition subtract_slowly : com :=
+  <{ while ~(X = 0) do
+       subtract_slowly_body
+     end }>.
+
+Definition subtract_3_from_5_slowly : com :=
+  <{ X := 3 ;
+     Z := 5 ;
+     subtract_slowly }>.
+
+Definition loop : com :=
+  <{ while true do
+       skip
+     end }>.
+
+Reserved Notation "st '=[' c ']=>' st'" (at level 40, c custom com at level 99,
+                                         st constr, st' constr at next level).
+
+Inductive ceval : com -> state -> state -> Prop :=
+| E_Skip : forall st,
+    st =[ skip ]=> st
+| E_Ass : forall st a n x,
+    aeval st a = n ->
+    st =[ x := a ]=> (x !-> n; st)
+| E_Seq : forall c1 c2 st st' st'',
+    st =[ c1 ]=> st' ->
+    st' =[ c2 ]=> st'' ->
+    st =[ c1 ; c2 ]=> st''
+| E_IfTrue : forall st st' b c1 c2,
+    beval st b = true ->
+    st =[ c1 ]=> st' ->
+    st =[ if b then c1 else c2 end]=> st'
+| E_IfFalse : forall st st' b c1 c2,
+    beval st b = false ->
+    st =[ c2 ]=> st' ->
+    st =[ if b then c1 else c2 end]=> st'
+| E_WhileFalse : forall b st c,
+    st =[ while b do c end]=> st
+| E_WhileTrue : forall st st' st'' b c,
+    beval st b = true ->
+    st =[ c ]=> st' ->
+    st' =[ while b do c end]=> st'' ->
+    st =[ while b do c end]=> st''
+where "st =[ c ]=> st'" := (ceval c st st').
+
+Example ceval_example1:
+  empty_st =[
+    X := 2;
+    if (X <= 1)
+      then Y := 3
+      else Z := 4
+    end
+  ]=> (Z !-> 4 ; X !-> 2).
+Proof.
+  apply E_Seq with (X !-> 2).
+  { constructor.
+    reflexivity. }
+  { apply E_IfFalse.
+    reflexivity.
+    apply E_Ass.
+    reflexivity. }
+Qed.
+
+Example ceval_example2:
+  empty_st =[
+    X := 0;
+    Y := 1;
+    Z := 2
+  ]=> (Z !-> 2 ; Y !-> 1 ; X !-> 0).
+Proof.
+  apply E_Seq with (X !-> 0).
+  { constructor.
+    reflexivity. }
+  { apply E_Seq with (Y !-> 1 ; X !-> 0).
+    { constructor.
+      reflexivity. }
+    { constructor.
+      reflexivity. }}
+Qed.
+
+Definition pup_to_n : com :=
+  <{ Y := 0;
+     while ~(X = 0) do
+       Y := Y + X;
+       X := X - 1
+     end}>.
+
+Theorem pup_to_n_ceval :
+  (X !-> 2) =[
+    pup_to_n
+  ]=> (X !-> 0 ; Y !-> 3 ; X !-> 1 ; Y !-> 2 ; Y !-> 0 ; X !-> 2).
+Proof.
+  apply E_Seq with (Y !-> 0 ; X !-> 2).
+  { constructor.
+    reflexivity. }
+  { apply E_WhileTrue with (X !-> 1; Y !-> 2; Y !-> 0; X !-> 2).
+    { reflexivity. }
+    { apply E_Seq with (Y !-> 2; Y !-> 0; X !-> 2).
+      { constructor.
+        reflexivity. }
+      { apply E_Ass.
+        reflexivity. } }
+    { apply E_WhileTrue with (X !-> 0; Y !-> 3; X !-> 1; Y !-> 2; Y !-> 0; X !-> 2).
+      { constructor. }
+      { apply E_Seq with (Y !-> 3; X !-> 1; Y !-> 2; Y !-> 0; X !-> 2).
+        { constructor.
+          compute.
+          reflexivity. }
+        { constructor.
+          reflexivity. } }
+      { constructor. } } }
+Qed.
+
+Theorem ceval_deterministic: forall c st st1 st2,
+    st =[ c ]=> st1 ->
+    st =[ c ]=> st2 ->
+    st1 = st2.
+Proof.
+  induction c.
+  { intros.
+    inversion H.
+    inversion H0.
+    subst st1 st2.
+    reflexivity. }
+  { intros.
+    inversion H.
+    inversion H0.
+    subst n0.
+    subst n.
+    reflexivity. }
+  { intros.
+    inversion H.
+    inversion H0.
+    apply IHc1 with (st:=st) (st1:=st') (st2:=st'0) in H3.
+    { subst st'0.
+      apply IHc2 with (st:=st') (st1:=st1) (st2:=st2) in H6.
+      { assumption. }
+      { assumption. } }
+    { assumption. } }
+  { admit. }
+  { admit. }
+Admitted.
