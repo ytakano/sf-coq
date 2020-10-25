@@ -234,3 +234,14 @@ Proof.
     { reflexivity. } }
   { reflexivity. }
 Qed.
+
+Lemma t_update_eq : forall (A : Type) (m : total_map A) x v,
+    (x !-> v ; m) x = v.
+Proof.
+  intros.
+  unfold t_update.
+  unfold eqb_string.
+  destruct string_dec.
+  { reflexivity. }
+  { contradiction. }
+Qed.

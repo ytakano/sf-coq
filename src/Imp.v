@@ -577,3 +577,28 @@ Proof.
   { admit. }
   { admit. }
 Admitted.
+
+Theorem plus2_spec : forall st n st',
+    st X = n -> st =[ plus2 ]=> st' -> st' X = n + 2.
+Proof.
+  intros.
+  inversion H0.
+  subst.
+  clear H0.
+  simpl.
+  apply t_update_eq.
+Qed.
+
+Theorem loop_never_stops : forall st st',
+    ~(st =[ loop ]=> st').
+Proof.
+  intros st st' contra.
+  unfold loop in contra.
+  remember <{ while true do skip end }> as loopdef eqn:Heqloopdef.
+  induction contra; try discriminate.
+  {
+    admit.
+  }
+  { apply IHcontra2.
+    assumption. }
+Admitted.
