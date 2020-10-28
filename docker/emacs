@@ -5,3 +5,5 @@
 (custom-set-variables 
   '(coq-prog-args '("-R" "/home/coq/cpdt/src" "Cpdt"))
 )
+
+(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
