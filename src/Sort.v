@@ -37,7 +37,7 @@ Definition sorted'' (al : list nat) := forall i j,
 
 Definition sorted' (al : list nat) := forall i j iv jv,
     i < j ->
-    nth_error al j = Some jv ->
+    nth_error al i = Some iv ->
     nth_error al j = Some jv ->
     iv <= jv.
 
@@ -85,7 +85,7 @@ Proof.
     { reflexivity. } }
 Qed.
 
-Lemma insert_perm_h : forall x l l',
+Lemma perm_then_insert : forall x l l',
     Permutation l l' -> Permutation (x :: l) (insert x l').
 Proof.
   intros.
@@ -147,19 +147,95 @@ Proof.
     simpl.
     bdestruct (x >=? a).
     { auto. }
-    {
-
-
-
-  induction sort.
-  { inv IHl.
-    { simpl.
-      repeat constructor. }
-    { simpl.
-      apply Permutation_sym,Permutation_nil in H0.
-      subst.
-      apply Permutation_sym,Permutation_nil in H.
-      subst.
-      repeat constructor. } }
+    { apply Permutation_sym.
+      replace (a :: x :: l0) with ([a] ++ x :: l0).
+      { apply Permutation_cons_app.
+        simpl.
+        apply Permutation_sym.
+        apply perm_then_insert.
+        assumption. }
+      { reflexivity. } } }
   { simpl.
-    bdestruct (a0 >=? a).
+    apply perm_then_insert.
+    rewrite <- H1.
+    replace (x :: y :: l0) with ([x] ++ y :: l0).
+    { apply Permutation_cons_app.
+      auto. }
+    { reflexivity. } }
+  { apply perm_then_insert.
+    apply perm_trans with (l:=l) (l':=l') (l'':=(sort l)) in H; assumption. }
+Qed.
+
+Theorem insertion_sort_correct:
+  is_a_sorting_algorithm sort.
+Proof.
+  unfold is_a_sorting_algorithm.
+  intros.
+  split.
+  { apply sort_perm. }
+  { apply sort_sorted. }
+Qed.
+
+Lemma nil_nth_none: forall (A : Type) (l : list A) n,
+    l = [] -> nth_error l n = None.
+Proof.
+  intros.
+  induction n.
+  { rewrite H.
+    reflexivity. }
+  { simpl.
+    rewrite H.
+    reflexivity. }
+Qed.
+
+Lemma add_min_sorted: forall x y l,
+    x <= y -> sorted (y :: l) -> sorted (x :: y :: l).
+Proof.
+  intros.
+  constructor; assumption.
+Qed.
+
+Lemma add_min_sorted': forall x y l,
+    x <= y -> sorted' (y :: l) -> sorted' (x :: y :: l).
+Proof.
+  unfold sorted'.
+  intros.
+  induction j.
+  { induction i; inv H1. }
+  {
+
+
+
+
+
+Lemma sorted_sorted': forall al,
+    sorted al -> sorted' al.
+Proof.
+  intros.
+  induction H.
+  { unfold sorted'.
+    induction i; intros; discriminate. }
+  { unfold sorted'.
+    induction i.
+    { intros.
+      simpl in H0.
+      inv H0.
+      induction j.
+      { simpl in H1.
+        inv H1.
+        reflexivity. }
+      { simpl in H1.
+        remember [] as l.
+        apply nil_nth_none with (n:=j) in Heql.
+        rewrite Heql in H1.
+        discriminate. } }
+    { intros.
+      inv H0.
+      remember [] as l.
+      apply nil_nth_none with (n:=i) in Heql.
+      rewrite Heql in H3.
+      discriminate. } }
+  {
+
+    apply add_min_sorted'; auto. }
+Qed.
