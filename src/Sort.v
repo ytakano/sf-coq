@@ -25,7 +25,7 @@ Qed.
 
 Inductive sorted : list nat -> Prop :=
 | sorted_nil : sorted []
-| sorted_l : forall x, sorted [x]
+| sorted_1 : forall x, sorted [x]
 | sorted_cons : forall x y l,
     x <= y -> sorted (y :: l) -> sorted (x :: y :: l).
 
@@ -188,6 +188,13 @@ Proof.
     reflexivity. }
 Qed.
 
+(*
+Lemma nth_succ: forall (A : Type) x y (l : list A) n,
+    nth_error (x :: y :: l) 0 = Some n -> nth_error (y :: l) 1 = Some n.
+Proof.
+  intros.
+ *)
+
 Lemma add_min_sorted: forall x y l,
     x <= y -> sorted (y :: l) -> sorted (x :: y :: l).
 Proof.
@@ -195,18 +202,101 @@ Proof.
   constructor; assumption.
 Qed.
 
-Lemma add_min_sorted': forall x y l,
-    x <= y -> sorted' (y :: l) -> sorted' (x :: y :: l).
+Lemma nth_error_elm1: forall (A : Type) (x y : A) n,
+    nth_error [x] n = Some y -> n = 0.
+Proof.
+  intros.
+  induction n.
+  { reflexivity. }
+  { simpl in H.
+    remember [] in H.
+    apply nil_nth_none with (n:=n) in Heql.
+    rewrite Heql in H.
+    discriminate. }
+Qed.
+    
+Lemma add_min_sorted'_1: forall x y,
+    x <= y -> sorted' ([x;y]).
 Proof.
   unfold sorted'.
   intros.
+  destruct H0.
+  { simpl in H2.
+    remember H2.
+    clear Heqe.
+    apply nth_error_elm1 in H2.
+    subst.
+    simpl in e.
+    simpl in H1.
+    inv H1.
+    inv e.
+    assumption. }
+  { remember H2.
+    simpl in H2.
+    clear Heqe.
+    apply nth_error_elm1 in H2.
+    subst.
+    inv H0. }
+Qed.
+
+Lemma sorted'_nil: sorted' [].
+Proof.
+  unfold sorted'.
+  intros.
+  remember [] in H0.
+  apply nil_nth_none with (n:=i) in Heql.
+  rewrite Heql in H0.
+  discriminate.
+Qed.
+
+Lemma sorted'_nth: forall x y l n,
+    sorted' l -> nth_error (x :: l) (S n) = Some y -> x <= y.
+Proof.
+  intros.
+  induction l.
+  { simpl in H0.
+    remember [].
+    apply nil_nth_none with (n:=n) in Heql.
+    rewrite Heql in H0.
+    discriminate. }
+  { inv H0.
+
+Admitted.
+
+Lemma sorted'_1: forall x,
+    sorted' [x].
+Proof.
+  unfold sorted'.
+  intros.
+  remember H0.
+  remember H1.
+  clear Heqe.
+  clear Heqe0.
+  apply nth_error_elm1 in H0.
+  apply nth_error_elm1 in H1.
+  subst.
+  inv H.
+Qed.
+
+Lemma sorted'_cons: forall x y l,
+    x <= y -> sorted' (y :: l) -> sorted' (x :: y :: l).
+Proof.
+  intros.
+  unfold sorted'.
   induction j.
-  { induction i; inv H1. }
-  {
-
-
-
-
+  { unfold sorted' in H0.
+    intros.
+    induction i; inv H1. }
+  { induction i.
+    { intros.
+      simpl in H2.
+      inv H2.
+      apply sorted'_nth with (l:=y::l) (n:=j); auto. }
+    { intros.
+      simpl in H2.
+      simpl in H3.
+      apply H0 with (i:=i) (j:=j); auto; omega. } }
+Qed.
 
 Lemma sorted_sorted': forall al,
     sorted al -> sorted' al.
@@ -235,7 +325,8 @@ Proof.
       apply nil_nth_none with (n:=i) in Heql.
       rewrite Heql in H3.
       discriminate. } }
-  {
+  { inv H0.
+    
 
     apply add_min_sorted'; auto. }
 Qed.
