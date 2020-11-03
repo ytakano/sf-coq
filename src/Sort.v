@@ -214,7 +214,7 @@ Proof.
     rewrite Heql in H.
     discriminate. }
 Qed.
-    
+
 Lemma add_min_sorted'_1: forall x y,
     x <= y -> sorted' ([x;y]).
 Proof.
@@ -249,20 +249,6 @@ Proof.
   discriminate.
 Qed.
 
-Lemma sorted'_nth: forall x y l n,
-    sorted' l -> nth_error (x :: l) (S n) = Some y -> x <= y.
-Proof.
-  intros.
-  induction l.
-  { simpl in H0.
-    remember [].
-    apply nil_nth_none with (n:=n) in Heql.
-    rewrite Heql in H0.
-    discriminate. }
-  { inv H0.
-
-Admitted.
-
 Lemma sorted'_1: forall x,
     sorted' [x].
 Proof.
@@ -278,6 +264,22 @@ Proof.
   inv H.
 Qed.
 
+Lemma sorted'_head_min: forall x y n l,
+    sorted' (x :: l) -> nth_error (x :: l) n = Some y -> x <= y.
+Proof.
+  intros.
+  destruct n.
+  { simpl in H0.
+    inversion H0.
+    omega. }
+  { induction n.
+    { unfold sorted' in H.
+      apply H with (i:=0) (j:=1); auto. }
+    { unfold sorted' in H.
+      apply H with (i:=0) (j:=S (S n)); auto.
+      omega. } }
+Qed.
+
 Lemma sorted'_cons: forall x y l,
     x <= y -> sorted' (y :: l) -> sorted' (x :: y :: l).
 Proof.
@@ -291,7 +293,8 @@ Proof.
     { intros.
       simpl in H2.
       inv H2.
-      apply sorted'_nth with (l:=y::l) (n:=j); auto. }
+      simpl in H3.
+      apply sorted'_head_min with (y:=jv) (n:=j) in H0; auto; omega. }
     { intros.
       simpl in H2.
       simpl in H3.
@@ -325,8 +328,5 @@ Proof.
       apply nil_nth_none with (n:=i) in Heql.
       rewrite Heql in H3.
       discriminate. } }
-  { inv H0.
-    
-
-    apply add_min_sorted'; auto. }
+  { apply sorted'_cons; auto. }
 Qed.
