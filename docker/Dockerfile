@@ -1,9 +1,6 @@
 FROM coqorg/coq
 
 RUN sudo apt-get update && sudo apt-get -y upgrade && sudo apt-get -y install emacs wget
-RUN wget http://adam.chlipala.net/cpdt/cpdt.tgz && tar xzfv cpdt.tgz
-
-RUN ["/bin/bash", "-c", "source /home/coq/.profile && cd /home/coq/cpdt && make"]
 
 COPY emacs /home/coq/.emacs
 

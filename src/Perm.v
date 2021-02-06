@@ -2,12 +2,11 @@ From Coq Require Import Bool.Bool.
 From Coq Require Import Init.Nat.
 From Coq Require Import Arith.Arith.
 From Coq Require Import Arith.EqNat.
-From Coq Require Import omega.Omega.
 From Coq Require Import Lists.List.
 From Coq Require Import Strings.String.
 Require Export Permutation.
 Export ListNotations.
-
+Require Import Psatz.
 
 Check lt.
 
@@ -30,7 +29,7 @@ Theorem omega_example2:
     i < j -> ~(k - 3 <= j) -> k > i.
 Proof.
   intros.
-  omega.
+  lia.
 Qed.
 
 Print reflect.
@@ -65,7 +64,7 @@ Example reflect_example1': forall a,
     (if a <? 5 then a else 2) < 6.
 Proof.
   intros.
-  destruct (ltb_reflect a 5); omega.
+  destruct (ltb_reflect a 5); lia.
 Qed.
 
 Hint Resolve ltb_reflect leb_reflect eqb_reflect : bdestruct.
@@ -82,7 +81,7 @@ Example reflect_example2: forall a,
     (if a <? 5 then a else 2) < 6.
 Proof.
   intros.
-  bdestruct (a <? 5); omega.
+  bdestruct (a <? 5); lia.
 Qed.
 
 Definition maybe_swap (al: list nat) : list nat :=
@@ -98,18 +97,18 @@ Proof.
   simpl.
   bdestruct (a <? b); simpl.
   { bdestruct (a >? b); simpl.
-    { omega. }
+    { lia. }
     { bdestruct (a >? b).
-      { omega. }
+      { lia. }
       { reflexivity. } } }
   { bdestruct (a >? b).
     { simpl.
       bdestruct (b >? a).
-      { omega. }
+      { lia. }
       { reflexivity. } }
     { simpl.
       bdestruct (a >? b).
-      { omega. }
+      { lia. }
       { reflexivity. } } }
 Qed.
 
@@ -202,7 +201,7 @@ Proof.
   { apply maybe_swap_perm. }
   { unfold maybe_swap.
     destruct al as [ | a [ | b al]]; simpl; auto.
-    bdestruct (a >? b); simpl; omega. }
+    bdestruct (a >? b); simpl; lia. }
 Qed.
 
 Ltac inv H := inversion H; clear H; subst.

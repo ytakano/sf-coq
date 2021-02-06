@@ -2,8 +2,8 @@ From Coq Require Import Bool.Bool.
 From Coq Require Import Init.Nat.
 From Coq Require Import Arith.Arith.
 From Coq Require Import Arith.EqNat.
-From Coq Require Import omega.Omega.
 From Coq Require Import Lists.List.
+Require Import Psatz.
 Require Import Perm.
 
 Fixpoint insert (i : nat) (l : list nat) :=
@@ -51,12 +51,12 @@ Proof.
   induction S; simpl.
   { constructor. }
   { bdestruct (x >=? a); constructor; try assumption; try constructor.
-    omega. }
+    lia. }
   { bdestruct (x >=? a).
     { repeat constructor; assumption. }
-    { bdestruct (y >=? a); repeat constructor; try assumption; try omega.
+    { bdestruct (y >=? a); repeat constructor; try assumption; try lia.
       simpl in IHS.
-      bdestruct (y >=? a); try omega; assumption. } }
+      bdestruct (y >=? a); try lia; assumption. } }
 Qed.
 
 Theorem sort_sorted : forall l, sorted (sort l).
@@ -271,13 +271,13 @@ Proof.
   destruct n.
   { simpl in H0.
     inversion H0.
-    omega. }
+    lia. }
   { induction n.
     { unfold sorted' in H.
       apply H with (i:=0) (j:=1); auto. }
     { unfold sorted' in H.
       apply H with (i:=0) (j:=S (S n)); auto.
-      omega. } }
+      lia. } }
 Qed.
 
 Lemma sorted'_cons: forall x y l,
@@ -294,11 +294,11 @@ Proof.
       simpl in H2.
       inv H2.
       simpl in H3.
-      apply sorted'_head_min with (y:=jv) (n:=j) in H0; auto; omega. }
+      apply sorted'_head_min with (y:=jv) (n:=j) in H0; auto; lia. }
     { intros.
       simpl in H2.
       simpl in H3.
-      apply H0 with (i:=i) (j:=j); auto; omega. } }
+      apply H0 with (i:=i) (j:=j); auto; lia. } }
 Qed.
 
 Lemma sorted_sorted': forall al,
