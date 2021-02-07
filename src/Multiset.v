@@ -7,6 +7,7 @@ From Coq Require Import Strings.String.
 From Coq Require Import Logic.FunctionalExtensionality.
 Require Import Psatz.
 Require Import Sort.
+Require Import Perm.
 Export ListNotations.
 
 Definition value := nat.
@@ -108,3 +109,40 @@ Proof.
 Qed.
 
 Definition manual_grade_for_permutations_vs_multiset : option (nat * string) := None.
+
+Lemma perm_contents: forall al bl : list nat,
+    Permutation al bl -> contents al = contents bl.
+Proof.
+  intros.
+  induction H.
+  { reflexivity. }
+  { simpl.
+    rewrite IHPermutation.
+    reflexivity. }
+  { simpl.
+    apply union_swap. }
+  { rewrite IHPermutation1.
+    rewrite IHPermutation2.
+    reflexivity. }
+Qed.
+
+Lemma contents_nil_inv: forall l,
+    (forall x, 0 = contents l x) -> l = nil.
+Proof.
+  intros.
+  induction l.
+  { reflexivity. }
+  { simpl in H.
+    unfold union in H.
+    unfold singleton in H.
+    specialize H with (x := a).
+    bdestruct (a =? a).
+    { discriminate. }
+    { contradiction. } }
+Qed.
+
+Lemma contents_cons_inv: forall l x n,
+    S n = contents l x ->
+    exists l1 l2, l = l1 ++ x :: l2 /\ contents (l1 ++ l2) x = n.
+Proof.
+Admitted.
