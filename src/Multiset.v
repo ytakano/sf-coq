@@ -145,4 +145,47 @@ Lemma contents_cons_inv: forall l x n,
     S n = contents l x ->
     exists l1 l2, l = l1 ++ x :: l2 /\ contents (l1 ++ l2) x = n.
 Proof.
+  intros.
+  destruct l.
+  { discriminate. }
+  { induction l.
+    { simpl in H.
+      unfold union, singleton in H.
+      bdestruct (x =? v).
+      { simpl in H.
+        inv H.
+        exists [], [].
+        auto. }
+      { simpl in H.
+        unfold empty in H.
+        discriminate. } }
+    { inv H.
+      unfold union, singleton in H1.
+      bdestruct (x =? v).
+      { bdestruct (x =? a).
+        { subst.
+          simpl in H1.
+          inv H1.
+          exists [a], l.
+          simpl.
+          unfold union, singleton.
+          simpl.
+          bdestruct (a =? a); try contradiction.
+          auto. }
+        { simpl in H1.
+          inv H1.
+          exists [], (a :: l).
+          simpl.
+          unfold union, singleton.
+          bdestruct (v =? a); try contradiction.
+          auto. } }
+      { bdestruct (x =? a).
+        { simpl in H1.
+          inv H1.
+          exists [v], l.
+          simpl.
+          unfold union, singleton.
+          bdestruct (a =? v); try contradiction.
+          auto. }
+        { simpl in H1.
 Admitted.
