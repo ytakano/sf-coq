@@ -145,47 +145,62 @@ Lemma contents_cons_inv: forall l x n,
     S n = contents l x ->
     exists l1 l2, l = l1 ++ x :: l2 /\ contents (l1 ++ l2) x = n.
 Proof.
-  intros.
-  destruct l.
-  { discriminate. }
-  { induction l.
+  induction l.
+  { intros.
+    discriminate. }
+  { intros.
+    simpl in H.
+    unfold union, singleton in H.
+    bdestruct (x =? a).
+    { subst.
+      exists [], l.
+      simpl.
+      simpl in H.
+      inv H.
+      auto. }
     { simpl in H.
-      unfold union, singleton in H.
-      bdestruct (x =? v).
-      { simpl in H.
-        inv H.
-        exists [], [].
-        auto. }
-      { simpl in H.
-        unfold empty in H.
-        discriminate. } }
-    { inv H.
-      unfold union, singleton in H1.
-      bdestruct (x =? v).
-      { bdestruct (x =? a).
-        { subst.
-          simpl in H1.
-          inv H1.
-          exists [a], l.
-          simpl.
-          unfold union, singleton.
-          simpl.
-          bdestruct (a =? a); try contradiction.
-          auto. }
-        { simpl in H1.
-          inv H1.
-          exists [], (a :: l).
-          simpl.
-          unfold union, singleton.
-          bdestruct (v =? a); try contradiction.
-          auto. } }
-      { bdestruct (x =? a).
-        { simpl in H1.
-          inv H1.
-          exists [v], l.
-          simpl.
-          unfold union, singleton.
-          bdestruct (a =? v); try contradiction.
-          auto. }
-        { simpl in H1.
-Admitted.
+      apply IHl in H.
+      destruct H.
+      destruct H.
+      destruct H.
+      subst.
+      exists (a :: x0), x1.
+      simpl.
+      unfold union, singleton.
+      bdestruct (x =? a); try contradiction.
+      simpl.
+      auto. } }
+Qed.
+
+Lemma contents_insert_other: forall l1 l2 x y,
+    y <> x -> contents (l1 ++ x :: l2) y = contents (l1 ++ l2) y.
+Proof.
+  intros.
+  induction l1.
+  { simpl.
+    unfold union, singleton.
+    bdestruct (y =? x); try contradiction.
+    auto. }
+  { induction l2.
+    { simpl.
+      unfold union, singleton.
+      bdestruct (y =? a).
+      { simpl.
+        rewrite IHl1.
+        reflexivity. }
+      { simpl.
+        rewrite IHl1.
+        reflexivity. } }
+    { simpl.
+      simpl in IHl2.
+      unfold union, singleton.
+      unfold union, singleton in IHl2.
+      bdestruct (y =? a).
+      { simpl.
+        subst.
+        rewrite IHl1.
+        reflexivity. }
+      { simpl.
+        rewrite IHl1.
+        reflexivity. } } }
+Qed.
