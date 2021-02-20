@@ -204,3 +204,77 @@ Proof.
         rewrite IHl1.
         reflexivity. } } }
 Qed.
+
+Lemma contents_perm: forall al bl,
+    contents al = contents bl -> Permutation al bl.
+Proof.
+  intros al bl H0.
+  assert (H: forall x, contents al x = contents bl x).
+  { rewrite H0. auto. }
+  clear H0.
+  generalize dependent bl.
+  induction al.
+  { induction bl.
+    { intros.
+      auto. }
+    { intros.
+      specialize (H a).
+      simpl in H.
+      unfold union in H.
+      unfold singleton in H.
+      bdestruct (a =? a); try contradiction.
+      unfold empty in H.
+      discriminate. } }
+  { intros.
+    pose proof (H a).
+    simpl in H0.
+    unfold union,singleton in H0.
+    bdestruct (a =? a); try contradiction.
+    apply contents_cons_inv in H0.
+    destruct H0.
+    destruct H0.
+    destruct H0.
+    inv H2.
+    apply Permutation_cons_app.
+    apply IHal.
+    intros.
+    specialize (H x1).
+    simpl in H.
+    unfold union,singleton in H.
+    bdestruct (x1 =? a).
+    { simpl in H.
+      apply contents_cons_inv in H.
+      destruct H.
+      destruct H.
+      destruct H.
+      subst.
+      auto. }
+    { simpl in H.
+      apply contents_insert_other with (l1 := x) (l2 := x0) in H0.
+      rewrite H0 in H.
+      assumption. } }
+Qed.
+
+Theorem same_contents_iff_perm: forall al bl,
+    contents al = contents bl <-> Permutation al bl.
+Proof.
+  intros.
+  split.
+  - apply contents_perm.
+  - apply perm_contents.
+Qed.
+
+Theorem sort_specification_equivalent: forall sort,
+    is_a_sorting_algorithm sort <-> is_a_sorting_algorithm' sort.
+Proof.
+  unfold is_a_sorting_algorithm.
+  unfold is_a_sorting_algorithm'.
+  split;
+    intros;
+    specialize (H al);
+    destruct H;
+    split;
+    try assumption;
+    apply same_contents_iff_perm;
+    assumption.
+Qed.
