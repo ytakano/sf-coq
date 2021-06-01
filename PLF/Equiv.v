@@ -387,7 +387,17 @@ Theorem WHILE_true : forall b c,
     (WHILE b DO c END)
     (WHILE true DO SKIP END).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  split;
+    intros;
+    apply WHILE_true_nonterm in H0;
+    try contradiction;
+    try auto.
+  simpl.
+  unfold bequiv.
+  reflexivity.
+Qed.
+  
 (** [] *)
 
 (** A more interesting fact about [WHILE] commands is that any number
@@ -422,7 +432,22 @@ Proof.
 Theorem seq_assoc : forall c1 c2 c3,
   cequiv ((c1;;c2);;c3) (c1;;(c2;;c3)).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  split.
+  { intros.
+    inversion H.
+    inversion H2.
+    subst.
+    apply E_Seq with (st' := st'1).
+    { assumption. }
+    { apply E_Seq with (st' := st'0); assumption. } }
+  { intros.
+    inversion H.
+    inversion H5.
+    subst.
+    apply E_Seq with (st' := st'1); try assumption.
+    { apply E_Seq with (st' := st'0); assumption. } }
+Qed.
+  
 (** [] *)
 
 (** Proving program properties involving assignments is one place
@@ -452,7 +477,29 @@ Theorem assign_aequiv : forall (x : string) e,
   aequiv x e ->
   cequiv SKIP (x ::= e).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros.
+  split.
+  { intros.
+    inversion H0.
+    subst.
+    unfold aequiv in H.
+    assert (Hx : st' =[ x ::= e ]=> (x !-> aeval st' e ; st')).
+    { apply E_Ass.
+      reflexivity. }
+    { rewrite <- H in Hx.
+      simpl in Hx.
+      rewrite t_update_same in Hx.
+      assumption. } }
+  { intros.
+    inversion H0.
+    subst.
+    unfold aequiv in H.
+    rewrite <- H.
+    simpl.
+    rewrite t_update_same.
+    apply E_Skip. }
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (equiv_classes)  *)
@@ -516,14 +563,16 @@ Definition prog_i : com :=
     X ::= Y + 1
   END)%imp.
 
-Definition equiv_classes : list (list com)
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition equiv_classes : list (list com) :=
+  [[prog_a; prog_c; prog_h]; [prog_b; prog_e]; [prog_f; prog_g]].
+
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_equiv_classes : option (nat*string) := None.
 (** [] *)
 
 (* ################################################################# *)
+
 (** * Properties of Behavioral Equivalence *)
 
 (** We next consider some fundamental properties of program
