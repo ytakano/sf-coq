@@ -516,11 +516,32 @@ Qed.
     Write down your answer below in the definition of
     [equiv_classes]. *)
 
+(* x = 0 *)
+(* x = 1
+   x = 1 + 1
+   loop {}
+*)
 Definition prog_a : com :=
   (WHILE ~(X <= 0) DO
     X ::= X + 1
   END)%imp.
 
+(* x = 0
+   x = 1
+   y = 1
+   x = 0
+   y = 0
+ *)
+(* x = 1
+   y = 0
+   x = 1
+   y = 0
+ *)
+(* x = 2
+   x = 2
+   y = 0
+ *)
+(* set 0 to y*)
 Definition prog_b : com :=
   (TEST X = 0 THEN
     X ::= X + 1;;
@@ -534,6 +555,11 @@ Definition prog_b : com :=
 Definition prog_c : com :=
   SKIP%imp.
 
+(* x = 0 *)
+(* x = 1
+   x = 1 * Y + 1
+   loop { }
+ *)
 Definition prog_d : com :=
   (WHILE ~(X = 0) DO
     X ::= (X * Y) + 1
@@ -542,6 +568,10 @@ Definition prog_d : com :=
 Definition prog_e : com :=
   (Y ::= 0)%imp.
 
+(* x = 0
+   y = 1
+ *)
+(* infinite loop *)
 Definition prog_f : com :=
   (Y ::= X + 1;;
   WHILE ~(X = Y) DO
@@ -553,6 +583,7 @@ Definition prog_g : com :=
     SKIP
   END)%imp.
 
+(* skip *)
 Definition prog_h : com :=
   (WHILE ~(X = X) DO
     X ::= X + 1
@@ -564,7 +595,7 @@ Definition prog_i : com :=
   END)%imp.
 
 Definition equiv_classes : list (list com) :=
-  [[prog_a; prog_c; prog_h]; [prog_b; prog_e]; [prog_f; prog_g]].
+  [[prog_a; prog_d]; [prog_b; prog_e]; [prog_f; prog_g]; [prog_h; prog_c]; [prog_i]].
 
 
 (* Do not modify the following line: *)
@@ -766,7 +797,18 @@ Theorem CSeq_congruence : forall c1 c1' c2 c2',
   cequiv c1 c1' -> cequiv c2 c2' ->
   cequiv (c1;;c2) (c1';;c2').
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros;
+    split;
+    intros;
+    inversion H1;
+    subst;
+    apply E_Seq with (st':=st'0);
+    try apply H;
+    try assumption;
+    try apply H0;
+    assumption.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (CIf_congruence)  *)
@@ -775,7 +817,33 @@ Theorem CIf_congruence : forall b b' c1 c1' c2 c2',
   cequiv (TEST b THEN c1 ELSE c2 FI)
          (TEST b' THEN c1' ELSE c2' FI).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros;
+  split;
+  intros;
+  inversion H2;
+  subst;
+  unfold bequiv in H.
+  { apply E_IfTrue.
+    { rewrite <- H.
+      assumption. }
+    { apply H0.
+      assumption. } }
+  { apply E_IfFalse.
+    { rewrite <- H.
+      assumption. }
+    { apply H1.
+      assumption. } }
+  { apply E_IfTrue.
+    { rewrite H.
+      assumption. }
+    { apply H0.
+      assumption. } }
+  { apply E_IfFalse.
+    { rewrite H.
+      assumption. }
+    { apply H1.
+      assumption. } }
+Qed.
 (** [] *)
 
 (** For example, here are two equivalent programs and a proof of their
@@ -1141,7 +1209,22 @@ Proof.
        become constants after folding *)
       simpl. destruct (n =? n0); reflexivity.
   - (* BLe *)
-    (* FILL IN HERE *) admit.
+    simpl.
+    remember (fold_constants_aexp a1) as a1'.
+    remember (fold_constants_aexp a2) as a2'.
+    destruct a1';
+      destruct a2';
+      rewrite fold_constants_aexp_sound;
+      rewrite <- Heqa1';
+      try remember (aeval st n) as aeval_n;
+      try remember (aeval st x) as aeval_x;
+      try (rewrite fold_constants_aexp_sound;
+           rewrite <- Heqa2'; subst; simpl; try reflexivity;
+           try (destruct (n <=? n0); reflexivity));
+      try (rewrite Heqa1';
+           remember (aeval st (fold_constants_aexp a1)) as aexpr_p;
+           rewrite fold_constants_aexp_sound;
+           rewrite <- Heqa2'; subst; simpl; reflexivity).
   - (* BNot *)
     simpl. remember (fold_constants_bexp b) as b' eqn:Heqb'.
     rewrite IHb.
@@ -1152,7 +1235,7 @@ Proof.
     remember (fold_constants_bexp b2) as b2' eqn:Heqb2'.
     rewrite IHb1. rewrite IHb2.
     destruct b1'; destruct b2'; reflexivity.
-(* FILL IN HERE *) Admitted.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (fold_constants_com_sound)  
@@ -1183,7 +1266,43 @@ Proof.
       apply trans_cequiv with c2; try assumption.
       apply TEST_false; assumption.
   - (* WHILE *)
-    (* FILL IN HERE *) Admitted.
+    destruct b; split; intros; simpl; simpl in H.
+    { apply WHILE_true_nonterm in H; try contradiction; apply refl_bequiv. }
+    { apply WHILE_true; try apply refl_bequiv; assumption. }
+    { apply WHILE_false in H; try assumption; apply refl_bequiv. }
+    { apply WHILE_false; try apply refl_bequiv; assumption. }
+    { assert (aequiv a1 (fold_constants_aexp a1)); try apply fold_constants_aexp_sound.
+      assert (aequiv a2 (fold_constants_aexp a2)); try apply fold_constants_aexp_sound.
+      destruct (fold_constants_aexp a1).
+      { destruct (fold_constants_aexp a2).
+        { inversion H.
+          { subst.
+            simpl in H6.
+            rewrite H0 in H6.
+            rewrite H1 in H6.
+            simpl in H6.
+            rewrite H6.
+            apply E_Skip. }
+          { subst.
+            simpl in H4.
+            rewrite H0 in H4.
+            rewrite H1 in H4.
+            simpl in H4.
+            rewrite H4.
+            apply WHILE_true_nonterm in H8; try contradiction.
+            unfold bequiv.
+            simpl.
+            intros.
+            rewrite H0.
+            rewrite H1.
+            simpl.
+            rewrite H4.
+            reflexivity. } }
+        { 
+    Admitted.
+      
+        
+
 (** [] *)
 
 (* ----------------------------------------------------------------- *)
