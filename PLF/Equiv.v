@@ -1266,42 +1266,32 @@ Proof.
       apply trans_cequiv with c2; try assumption.
       apply TEST_false; assumption.
   - (* WHILE *)
-    destruct b; split; intros; simpl; simpl in H.
+    destruct b; split; intros; simpl in H.
     { apply WHILE_true_nonterm in H; try contradiction; apply refl_bequiv. }
     { apply WHILE_true; try apply refl_bequiv; assumption. }
     { apply WHILE_false in H; try assumption; apply refl_bequiv. }
     { apply WHILE_false; try apply refl_bequiv; assumption. }
-    { assert (aequiv a1 (fold_constants_aexp a1)); try apply fold_constants_aexp_sound.
-      assert (aequiv a2 (fold_constants_aexp a2)); try apply fold_constants_aexp_sound.
-      destruct (fold_constants_aexp a1).
-      { destruct (fold_constants_aexp a2).
-        { inversion H.
-          { subst.
-            simpl in H6.
-            rewrite H0 in H6.
-            rewrite H1 in H6.
-            simpl in H6.
-            rewrite H6.
-            apply E_Skip. }
-          { subst.
-            simpl in H4.
-            rewrite H0 in H4.
-            rewrite H1 in H4.
-            simpl in H4.
-            rewrite H4.
-            apply WHILE_true_nonterm in H8; try contradiction.
-            unfold bequiv.
-            simpl.
-            intros.
-            rewrite H0.
-            rewrite H1.
-            simpl.
-            rewrite H4.
-            reflexivity. } }
-        { 
+    { inversion H; subst;
+      assert (bequiv (a1 = a2) (fold_constants_bexp (a1 = a2))); try apply fold_constants_bexp_sound;
+      destruct (fold_constants_bexp (a1 = a2));
+      try (apply E_WhileFalse; rewrite H0 in H4; assumption);
+      try apply E_Skip;
+      try (apply WHILE_true_nonterm in H; try contradiction; assumption);
+      try (apply WHILE_false in H; assumption).
+      { apply WHILE_true_nonterm in H; try contradiction.
+        admit. }
+      { apply WHILE_true_nonterm in H; try contradiction.
+        admit. }
+      { admit. }
+      { admit. } }
+    { admit. }
+    { admit. }
+    { admit. }
+    { admit. }
+    { admit. }
+    { admit. }
+    { admit. }
     Admitted.
-      
-        
 
 (** [] *)
 
