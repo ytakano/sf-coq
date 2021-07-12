@@ -1002,14 +1002,20 @@ Example assn_sub_ex1' :
   X := 2 * X
   {{ X <= 10 }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply hoare_consequence_pre.
+  { apply hoare_asgn. }
+  { assn_auto. }
+Qed.
 
 Example assn_sub_ex2' :
   {{ 0 <= 3 /\ 3 <= 5 }}
   X := 3
   {{ 0 <= X /\ X <= 5 }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  eapply hoare_consequence_pre.
+  { apply hoare_asgn. }
+  { assn_auto. }
+Qed.
 
 (** [] *)
 
