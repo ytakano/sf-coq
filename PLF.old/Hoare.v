@@ -536,7 +536,28 @@ Theorem hoare_asgn_fwd :
   {{fun st => P (X !-> m ; st)
            /\ st X = aeval (X !-> m ; st) a }}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold hoare_triple.
+  intros.
+  split.
+  { inversion H.
+    subst.
+    rewrite t_update_shadow.
+    inversion H0.
+    subst.
+    rewrite t_update_same.
+    assumption. }
+  { inversion H.
+    inversion H0.
+    subst.
+    induction a; simpl;
+      try (rewrite t_update_shadow;
+           rewrite t_update_same;
+           rewrite t_update_eq;
+           reflexivity).
+    { simpl.
+      rewrite t_update_eq.
+      reflexivity. } }
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced, optional (hoare_asgn_fwd_exists)  
@@ -560,7 +581,16 @@ Theorem hoare_asgn_fwd_exists :
                 st X = aeval (X !-> m ; st) a }}.
 Proof.
   intros a P.
-  (* FILL IN HERE *) Admitted.
+  unfold hoare_triple.
+  intros.
+  inversion H.
+  subst.
+  exists (aeval st X).
+  rewrite t_update_eq.
+  rewrite t_update_shadow.
+  rewrite t_update_same.
+  split; try assumption; reflexivity.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
