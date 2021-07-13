@@ -1122,9 +1122,13 @@ Example hoare_asgn_example4 :
   Y := 2
     {{ X = 1 /\ Y = 2 }}.
 Proof.
-  apply hoare_seq with (Q := (X = 1)%assertion).
+  apply hoare_seq with (Q := (X = 1)%assertion);
+    unfold hoare_triple;
+    intros;
+    inversion H;
+    assn_auto.
+Qed.
   (* The annotation [%assertion] is needed here to help Coq parse correctly. *)
-  (* FILL IN HERE *) Admitted.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (swap_exercise)
@@ -1140,15 +1144,22 @@ Proof.
     your proof will want to start at the end and work back to the
     beginning of your program.)  *)
 
-Definition swap_program : com
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition swap_program : com := <{ Z := X; X := Y; Y := Z }>.
 
 Theorem swap_exercise :
   {{X <= Y}}
   swap_program
   {{Y <= X}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold swap_program;
+    apply hoare_seq with (Q := (Z <= Y)%assertion);
+    try apply hoare_seq with (Q := (Z <= X)%assertion);
+    unfold hoare_triple;
+    intros;
+    inversion H;
+    subst;
+    assn_auto.
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, standard (invalid_triple)
