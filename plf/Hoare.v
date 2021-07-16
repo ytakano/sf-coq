@@ -1385,7 +1385,11 @@ Theorem if_minus_plus :
   end
   {{Y = X + Z}}.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply hoare_if;
+    eapply hoare_consequence_pre;
+    try apply hoare_asgn;
+    assn_auto''.
+Qed.
 (** [] *)
 
 (* ----------------------------------------------------------------- *)
@@ -1444,135 +1448,139 @@ Reserved Notation "st '=[' c ']=>'' st'"
          (at level 40, c custom com at level 99,
           st constr, st' constr at next level).
 
-Inductive ceval : com -> state -> state -> Prop :=
-  | E_Skip : forall st,
-      st =[ skip ]=> st
-  | E_Asgn  : forall st a1 n x,
-      aeval st a1 = n ->
-      st =[ x := a1 ]=> (x !-> n ; st)
-  | E_Seq : forall c1 c2 st st' st'',
-      st  =[ c1 ]=> st'  ->
-      st' =[ c2 ]=> st'' ->
-      st  =[ c1 ; c2 ]=> st''
-  | E_IfTrue : forall st st' b c1 c2,
-      beval st b = true ->
-      st =[ c1 ]=> st' ->
-      st =[ if b then c1 else c2 end ]=> st'
-  | E_IfFalse : forall st st' b c1 c2,
-      beval st b = false ->
-      st =[ c2 ]=> st' ->
-      st =[ if b then c1 else c2 end ]=> st'
-  | E_WhileFalse : forall b st c,
-      beval st b = false ->
-      st =[ while b do c end ]=> st
-  | E_WhileTrue : forall st st' st'' b c,
-      beval st b = true ->
-      st  =[ c ]=> st' ->
-      st' =[ while b do c end ]=> st'' ->
-      st  =[ while b do c end ]=> st''
-(* FILL IN HERE *)
+(* Inductive ceval : com -> state -> state -> Prop := *)
+(*   | E_Skip : forall st, *)
+(*       st =[ skip ]=> st *)
+(*   | E_Asgn  : forall st a1 n x, *)
+(*       aeval st a1 = n -> *)
+(*       st =[ x := a1 ]=> (x !-> n ; st) *)
+(*   | E_Seq : forall c1 c2 st st' st'', *)
+(*       st  =[ c1 ]=> st'  -> *)
+(*       st' =[ c2 ]=> st'' -> *)
+(*       st  =[ c1 ; c2 ]=> st'' *)
+(*   | E_IfTrue : forall st st' b c1 c2, *)
+(*       beval st b = true -> *)
+(*       st =[ c1 ]=> st' -> *)
+(*       st =[ if b then c1 else c2 end ]=> st' *)
+(*   | E_IfFalse : forall st st' b c1 c2, *)
+(*       beval st b = false -> *)
+(*       st =[ c2 ]=> st' -> *)
+(*       st =[ if b then c1 else c2 end ]=> st' *)
+(*   | E_WhileFalse : forall b st c, *)
+(*       beval st b = false -> *)
+(*       st =[ while b do c end ]=> st *)
+(*   | E_WhileTrue : forall st st' st'' b c, *)
+(*       beval st b = true -> *)
+(*       st  =[ c ]=> st' -> *)
+(*       st' =[ while b do c end ]=> st'' -> *)
+(*       st  =[ while b do c end ]=> st''. *)
+(*   | E_If1True : forall st st' b c, *)
+(*       beval st b = true -> *)
+(*       st =[ c ]=> st' -> *)
+(*       st =[ if1 b then c end ]=> st'. *)
+(* (* FILL IN HERE *) *)
 
-where "st '=[' c ']=>' st'" := (ceval c st st').
+(* where "st '=[' c ']=>' st'" := (ceval c st st'). *)
 
-Hint Constructors ceval : core.
+(* Hint Constructors ceval : core. *)
 
-(** The following unit tests should be provable simply by [eauto] if
-    you have defined the rules for [if1] correctly. *)
+(* (** The following unit tests should be provable simply by [eauto] if *)
+(*     you have defined the rules for [if1] correctly. *) *)
 
-Example if1true_test :
-  empty_st =[ if1 X = 0 then X := 1 end ]=> (X !-> 1).
-Proof. (* FILL IN HERE *) Admitted.
+(* Example if1true_test : *)
+(*   empty_st =[ if1 X = 0 then X := 1 end ]=> (X !-> 1). *)
+(* Proof. (* FILL IN HERE *) Admitted. *)
 
-Example if1false_test :
-  (X !-> 2) =[ if1 X = 0 then X := 1 end ]=> (X !-> 2).
-Proof. (* FILL IN HERE *) Admitted.
+(* Example if1false_test : *)
+(*   (X !-> 2) =[ if1 X = 0 then X := 1 end ]=> (X !-> 2). *)
+(* Proof. (* FILL IN HERE *) Admitted. *)
 
-(** [] *)
+(* (** [] *) *)
 
-(** Now we have to repeat the definition and notation of Hoare triples,
-    so that they will use the updated [com] type. *)
+(* (** Now we have to repeat the definition and notation of Hoare triples, *)
+(*     so that they will use the updated [com] type. *) *)
 
-Definition hoare_triple
-           (P : Assertion) (c : com) (Q : Assertion) : Prop :=
-  forall st st',
-       st =[ c ]=> st' ->
-       P st  ->
-       Q st'.
+(* Definition hoare_triple *)
+(*            (P : Assertion) (c : com) (Q : Assertion) : Prop := *)
+(*   forall st st', *)
+(*        st =[ c ]=> st' -> *)
+(*        P st  -> *)
+(*        Q st'. *)
 
-Hint Unfold hoare_triple : core.
+(* Hint Unfold hoare_triple : core. *)
 
-Notation "{{ P }}  c  {{ Q }}" := (hoare_triple P c Q)
-                                  (at level 90, c custom com at level 99)
-                                  : hoare_spec_scope.
+(* Notation "{{ P }}  c  {{ Q }}" := (hoare_triple P c Q) *)
+(*                                   (at level 90, c custom com at level 99) *)
+(*                                   : hoare_spec_scope. *)
 
-(** **** Exercise: 2 stars, standard (hoare_if1) *)
+(* (** **** Exercise: 2 stars, standard (hoare_if1) *) *)
 
-(** Invent a Hoare logic proof rule for [if1].  State and prove a
-    theorem named [hoare_if1] that shows the validity of your rule.
-    Use [hoare_if] as a guide. Try to invent a rule that is
-    _complete_, meaning it can be used to prove the correctness of as
-    many one-sided conditionals as possible.  Also try to keep your
-    rule _compositional_, meaning that any Imp command that appears
-    in a premise should syntactically be a part of the command
-    in the conclusion.
+(* (** Invent a Hoare logic proof rule for [if1].  State and prove a *)
+(*     theorem named [hoare_if1] that shows the validity of your rule. *)
+(*     Use [hoare_if] as a guide. Try to invent a rule that is *)
+(*     _complete_, meaning it can be used to prove the correctness of as *)
+(*     many one-sided conditionals as possible.  Also try to keep your *)
+(*     rule _compositional_, meaning that any Imp command that appears *)
+(*     in a premise should syntactically be a part of the command *)
+(*     in the conclusion. *)
 
-    Hint: if you encounter difficulty getting Coq to parse part of
-    your rule as an assertion, try manually indicating that it should
-    be in the assertion scope.  For example, if you want [e] to be
-    parsed as an assertion, write it as [(e)%assertion]. *)
+(*     Hint: if you encounter difficulty getting Coq to parse part of *)
+(*     your rule as an assertion, try manually indicating that it should *)
+(*     be in the assertion scope.  For example, if you want [e] to be *)
+(*     parsed as an assertion, write it as [(e)%assertion]. *) *)
 
-(* FILL IN HERE *)
+(* (* FILL IN HERE *) *)
 
-(** For full credit, prove formally [hoare_if1_good] that your rule is
-    precise enough to show the following valid Hoare triple:
+(* (** For full credit, prove formally [hoare_if1_good] that your rule is *)
+(*     precise enough to show the following valid Hoare triple: *)
 
-  {{ X + Y = Z }}
-  if1 ~(Y = 0) then
-    X := X + Y
-  end
-  {{ X = Z }}
-*)
-(* Do not modify the following line: *)
-Definition manual_grade_for_hoare_if1 : option (nat*string) := None.
-(** [] *)
+(*   {{ X + Y = Z }} *)
+(*   if1 ~(Y = 0) then *)
+(*     X := X + Y *)
+(*   end *)
+(*   {{ X = Z }} *)
+(* *) *)
+(* (* Do not modify the following line: *) *)
+(* Definition manual_grade_for_hoare_if1 : option (nat*string) := None. *)
+(* (** [] *) *)
 
-(** Before the next exercise, we need to restate the Hoare rules of
-    consequence (for preconditions) and assignment for the new [com]
-    type. *)
+(* (** Before the next exercise, we need to restate the Hoare rules of *)
+(*     consequence (for preconditions) and assignment for the new [com] *)
+(*     type. *) *)
 
-Theorem hoare_consequence_pre : forall (P P' Q : Assertion) c,
-  {{P'}} c {{Q}} ->
-  P ->> P' ->
-  {{P}} c {{Q}}.
-Proof.
-  eauto.
-Qed.
+(* Theorem hoare_consequence_pre : forall (P P' Q : Assertion) c, *)
+(*   {{P'}} c {{Q}} -> *)
+(*   P ->> P' -> *)
+(*   {{P}} c {{Q}}. *)
+(* Proof. *)
+(*   eauto. *)
+(* Qed. *)
 
-Theorem hoare_asgn : forall Q X a,
-  {{Q [X |-> a]}} (X := a) {{Q}}.
-Proof.
-  intros Q X a st st' Heval HQ.
-  inversion Heval; subst.
-  auto.
-Qed.
+(* Theorem hoare_asgn : forall Q X a, *)
+(*   {{Q [X |-> a]}} (X := a) {{Q}}. *)
+(* Proof. *)
+(*   intros Q X a st st' Heval HQ. *)
+(*   inversion Heval; subst. *)
+(*   auto. *)
+(* Qed. *)
 
-(** **** Exercise: 2 stars, standard (hoare_if1_good) *)
+(* (** **** Exercise: 2 stars, standard (hoare_if1_good) *) *)
 
-(** Prove that your [if1] rule is complete enough for the following
-    valid Hoare triple.
+(* (** Prove that your [if1] rule is complete enough for the following *)
+(*     valid Hoare triple. *)
 
-    Hint: [assn_auto''] once more will get you most but not all the way
-    to a completely automated proof.  You can finish manually, or
-    tweak the tactic further. *)
+(*     Hint: [assn_auto''] once more will get you most but not all the way *)
+(*     to a completely automated proof.  You can finish manually, or *)
+(*     tweak the tactic further. *) *)
 
-Lemma hoare_if1_good :
-  {{ X + Y = Z }}
-  if1 ~(Y = 0) then
-    X := X + Y
-  end
-  {{ X = Z }}.
-Proof. (* FILL IN HERE *) Admitted.
-(** [] *)
+(* Lemma hoare_if1_good : *)
+(*   {{ X + Y = Z }} *)
+(*   if1 ~(Y = 0) then *)
+(*     X := X + Y *)
+(*   end *)
+(*   {{ X = Z }}. *)
+(* Proof. (* FILL IN HERE *) Admitted. *)
+(* (** [] *) *)
 
 End If1.
 
