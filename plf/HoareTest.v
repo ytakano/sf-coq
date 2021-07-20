@@ -182,58 +182,58 @@ Print Assumptions if_minus_plus.
 Goal True.
 idtac " ".
 
-idtac "-------------------  if1_ceval  --------------------".
-idtac " ".
+(* idtac "-------------------  if1_ceval  --------------------". *)
+(* idtac " ". *)
 
-idtac "#> If1.if1true_test".
-idtac "Possible points: 1".
-check_type @If1.if1true_test (
-(If1.ceval (If1.CIf1 <{ (AId X) = (ANum 0) }> (If1.CAsgn X (ANum 1)))
-   empty_st (X !-> 1))).
-idtac "Assumptions:".
-Abort.
-Print Assumptions If1.if1true_test.
-Goal True.
-idtac " ".
+(* idtac "#> If1.if1true_test". *)
+(* idtac "Possible points: 1". *)
+(* check_type @If1.if1true_test ( *)
+(* (If1.ceval (If1.CIf1 <{ (AId X) = (ANum 0) }> (If1.CAsgn X (ANum 1))) *)
+(*    empty_st (X !-> 1))). *)
+(* idtac "Assumptions:". *)
+(* Abort. *)
+(* Print Assumptions If1.if1true_test. *)
+(* Goal True. *)
+(* idtac " ". *)
 
-idtac "#> If1.if1false_test".
-idtac "Possible points: 1".
-check_type @If1.if1false_test (
-(If1.ceval (If1.CIf1 <{ (AId X) = (ANum 0) }> (If1.CAsgn X (ANum 1)))
-   (X !-> 2) (X !-> 2))).
-idtac "Assumptions:".
-Abort.
-Print Assumptions If1.if1false_test.
-Goal True.
-idtac " ".
+(* idtac "#> If1.if1false_test". *)
+(* idtac "Possible points: 1". *)
+(* check_type @If1.if1false_test ( *)
+(* (If1.ceval (If1.CIf1 <{ (AId X) = (ANum 0) }> (If1.CAsgn X (ANum 1))) *)
+(*    (X !-> 2) (X !-> 2))). *)
+(* idtac "Assumptions:". *)
+(* Abort. *)
+(* Print Assumptions If1.if1false_test. *)
+(* Goal True. *)
+(* idtac " ". *)
 
-idtac "-------------------  hoare_if1  --------------------".
-idtac " ".
+(* idtac "-------------------  hoare_if1  --------------------". *)
+(* idtac " ". *)
 
-idtac "#> Manually graded: If1.hoare_if1".
-idtac "Possible points: 2".
-print_manual_grade If1.manual_grade_for_hoare_if1.
-idtac " ".
+(* idtac "#> Manually graded: If1.hoare_if1". *)
+(* idtac "Possible points: 2". *)
+(* print_manual_grade If1.manual_grade_for_hoare_if1. *)
+(* idtac " ". *)
 
-idtac "-------------------  hoare_if1_good  --------------------".
-idtac " ".
+(* idtac "-------------------  hoare_if1_good  --------------------". *)
+(* idtac " ". *)
 
-idtac "#> If1.hoare_if1_good".
-idtac "Possible points: 2".
-check_type @If1.hoare_if1_good (
-(If1.hoare_triple
-   (fun st : state =>
-    mkAexp
-      (fun st0 : state =>
-       (Aexp_of_aexp (AId X) st0 + Aexp_of_aexp (AId Y) st0)%nat) st =
-    Aexp_of_aexp (AId Z) st)
-   (If1.CIf1 <{ ~ (AId Y) = (ANum 0) }> (If1.CAsgn X <{ (AId X) + (AId Y) }>))
-   (fun st : state => Aexp_of_aexp (AId X) st = Aexp_of_aexp (AId Z) st))).
-idtac "Assumptions:".
-Abort.
-Print Assumptions If1.hoare_if1_good.
-Goal True.
-idtac " ".
+(* idtac "#> If1.hoare_if1_good". *)
+(* idtac "Possible points: 2". *)
+(* check_type @If1.hoare_if1_good ( *)
+(* (If1.hoare_triple *)
+(*    (fun st : state => *)
+(*     mkAexp *)
+(*       (fun st0 : state => *)
+(*        (Aexp_of_aexp (AId X) st0 + Aexp_of_aexp (AId Y) st0)%nat) st = *)
+(*     Aexp_of_aexp (AId Z) st) *)
+(*    (If1.CIf1 <{ ~ (AId Y) = (ANum 0) }> (If1.CAsgn X <{ (AId X) + (AId Y) }>)) *)
+(*    (fun st : state => Aexp_of_aexp (AId X) st = Aexp_of_aexp (AId Z) st))). *)
+(* idtac "Assumptions:". *)
+(* Abort. *)
+(* Print Assumptions If1.hoare_if1_good. *)
+(* Goal True. *)
+(* idtac " ". *)
 
 idtac "-------------------  hoare_repeat  --------------------".
 idtac " ".
@@ -312,14 +312,14 @@ idtac "---------- invalid_triple ---------".
 Print Assumptions invalid_triple.
 idtac "---------- if_minus_plus ---------".
 Print Assumptions if_minus_plus.
-idtac "---------- If1.if1true_test ---------".
-Print Assumptions If1.if1true_test.
-idtac "---------- If1.if1false_test ---------".
-Print Assumptions If1.if1false_test.
-idtac "---------- hoare_if1 ---------".
-idtac "MANUAL".
-idtac "---------- If1.hoare_if1_good ---------".
-Print Assumptions If1.hoare_if1_good.
+(* idtac "---------- If1.if1true_test ---------". *)
+(* Print Assumptions If1.if1true_test. *)
+(* idtac "---------- If1.if1false_test ---------". *)
+(* Print Assumptions If1.if1false_test. *)
+(* idtac "---------- hoare_if1 ---------". *)
+(* idtac "MANUAL". *)
+(* idtac "---------- If1.hoare_if1_good ---------". *)
+(* Print Assumptions If1.hoare_if1_good. *)
 idtac "---------- Himp.hoare_havoc ---------".
 Print Assumptions Himp.hoare_havoc.
 idtac "---------- Himp.havoc_post ---------".
